@@ -1,11 +1,15 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ensureGlobalConfig, loadConfig } from "../src/core/config/loadConfig.js";
+import { redactApiKeys } from "../src/core/config/apiKeys.js";
+import { ensureGlobalConfig, loadConfig, OWNER_ONLY_FILE_MODE } from "../src/core/config/loadConfig.js";
 import { setConfigValue } from "../src/core/config/saveConfig.js";
 import { DEFAULT_CONFIG, describeConfigOptions } from "../src/core/config/schema.js";
 import { ConfigError } from "../src/core/errors.js";
+
+const PERMISSION_BITS = 0o777;
+const WORLD_READABLE_MODE = 0o644;
 
 describe("configuration", () => {
   let directory: string;
@@ -20,6 +24,7 @@ describe("configuration", () => {
   afterEach(() => rmSync(directory, { recursive: true, force: true }));
 
   const writeJson = (path: string, content: object): void => writeFileSync(path, JSON.stringify(content));
+  const permissionsOf = (path: string): number => statSync(path).mode & PERMISSION_BITS;
 
   it("crée le fichier global avec les valeurs par défaut", async () => {
     await ensureGlobalConfig(globalPath);
@@ -96,6 +101,31 @@ describe("configuration", () => {
       setConfigValue({ scope: "global", path: globalPath }, "ai.provider", "inconnu"),
     ).rejects.toBeInstanceOf(ConfigError);
     expect(readFileSync(globalPath, "utf8")).toBe(before);
+  });
+
+  it("accepte une clé API dans apiKeyEnv du fichier global et la masque à l'affichage", async () => {
+    await ensureGlobalConfig(globalPath);
+    const pastedKey = "gsk_AbCdEfGh123";
+    await setConfigValue({ scope: "global", path: globalPath }, "ai.groq.apiKeyEnv", pastedKey);
+
+    const config = await loadConfig({ globalPath });
+    expect(config.ai.groq.apiKeyEnv).toBe(pastedKey);
+    expect(JSON.stringify(redactApiKeys(config))).not.toContain(pastedKey);
+  });
+
+  it("rend le fichier global lisible par son seul propriétaire, même s'il existait déjà", async () => {
+    await ensureGlobalConfig(globalPath);
+    chmodSync(globalPath, WORLD_READABLE_MODE);
+
+    await ensureGlobalConfig(globalPath);
+    expect(permissionsOf(globalPath)).toBe(OWNER_ONLY_FILE_MODE);
+
+    await setConfigValue({ scope: "global", path: globalPath }, "ai.groq.apiKeyEnv", "gsk_AbCd123");
+    expect(permissionsOf(globalPath)).toBe(OWNER_ONLY_FILE_MODE);
+  });
+
+  it("n'altère pas un nom de variable à l'affichage", () => {
+    expect(redactApiKeys(DEFAULT_CONFIG)).toEqual(DEFAULT_CONFIG);
   });
 
   it("refuse un chemin qui viserait le prototype", async () => {

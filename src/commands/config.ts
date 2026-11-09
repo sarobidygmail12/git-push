@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { execa, parseCommandString } from "execa";
+import { redactApiKeys } from "../core/config/apiKeys.js";
 import { loadConfig, readJsonObject, serializeConfig } from "../core/config/loadConfig.js";
 import { getValueAt, setConfigValue, type ConfigTarget } from "../core/config/saveConfig.js";
 import { DEFAULT_CONFIG, describeConfigOptions, type Config, type ConfigOptionDoc } from "../core/config/schema.js";
@@ -43,7 +44,7 @@ function restoreListQuotes(path: string, rawValue: string): string {
 }
 
 function showConfig(ctx: CommandContext): void {
-  ctx.ui.log(`${describeLocations(ctx)}\n\n${serializeConfig(ctx.config)}`);
+  ctx.ui.log(`${describeLocations(ctx)}\n\n${serializeConfig(redactApiKeys(ctx.config))}`);
 }
 
 function describeLocations(ctx: CommandContext): string {
@@ -59,7 +60,7 @@ async function browseConfig(ctx: CommandContext, useRepo: boolean): Promise<void
 /** Réaffiche la liste après chaque modification, curseur sur l'option modifiée, jusqu'à Échap. */
 async function browseFrom(ctx: CommandContext, config: Config, useRepo: boolean, initial?: string): Promise<void> {
   const options = describeConfigOptions();
-  const choices = options.map((option) => toChoice(option, config));
+  const choices = options.map((option) => toChoice(option, redactApiKeys(config)));
   const selectedPath = await ctx.ui.select(BROWSE_QUESTION, choices, initial === undefined ? undefined : { initial });
   const selected = options.find((option) => option.path === selectedPath);
   if (!selected) return;
@@ -77,7 +78,7 @@ function formatValue(value: unknown): string {
 /** Renvoie la configuration à afficher ensuite : inchangée si la saisie est annulée ou refusée. */
 async function editOption(ctx: CommandContext, config: Config, option: ConfigOptionDoc, useRepo: boolean): Promise<Config> {
   const current = getValueAt(config, option.path);
-  const initial = formatValue(current);
+  const initial = formatValue(getValueAt(redactApiKeys(config), option.path));
   const answer = (await ctx.ui.ask(`${option.path} : ${option.description}`, { initial }))?.trim();
   if (answer === undefined || answer === initial) return config;
 

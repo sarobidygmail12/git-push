@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { Command, WebServer } from "../commands/types.js";
+import { redactApiKeys } from "../core/config/apiKeys.js";
 import { describeConfigOptions, type Config } from "../core/config/schema.js";
 import { GitPilotError } from "../core/errors.js";
 import type { GitClient } from "../core/git/gitClient.js";
@@ -153,7 +154,7 @@ async function buildHelpData(commands: readonly Command[], readConfig: () => Pro
 
 async function readEffectiveConfig(readConfig: () => Promise<Config>): Promise<Config | null> {
   try {
-    return await readConfig();
+    return redactApiKeys(await readConfig());
   } catch {
     return null;
   }

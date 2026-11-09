@@ -259,7 +259,7 @@ gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves
 
 The provider receives the list of files and the staged diff, truncated to 12,000 characters. For `.env*`, `*.pem`, `*.key` and `id_rsa*` files, only the name is sent.
 
-Your keys stay in your environment. The configuration only holds the names of the variables.
+`apiKeyEnv` holds the name of an environment variable, which keeps the key out of the file, or the key itself. A key written there stays in plain text in `~/.gitpilot/config.json` and is masked wherever gitpilot shows the configuration.
 
 Default models change quickly. If a provider answers `HTTP 404`, change its model: `/config set ai.groq.model <model>`.
 

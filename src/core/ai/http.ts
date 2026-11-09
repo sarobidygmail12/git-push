@@ -1,3 +1,4 @@
+import { looksLikeApiKey } from "../config/apiKeys.js";
 import { ProviderError } from "../errors.js";
 import type { ProviderName } from "../config/schema.js";
 
@@ -33,8 +34,10 @@ function toProviderError(provider: ProviderName, error: unknown): ProviderError 
   return new ProviderError(provider, "unavailable", error instanceof Error ? error.message : String(error));
 }
 
-export function readApiKey(provider: ProviderName, envName: string, env: NodeJS.ProcessEnv): string {
-  const key = env[envName];
-  if (!key) throw new ProviderError(provider, "missing-key", envName);
+/** `apiKeyEnv` contient le nom d'une variable d'environnement, ou directement la clé. */
+export function readApiKey(provider: ProviderName, keySource: string, env: NodeJS.ProcessEnv): string {
+  if (looksLikeApiKey(keySource)) return keySource;
+  const key = env[keySource];
+  if (!key) throw new ProviderError(provider, "missing-key", keySource);
   return key;
 }

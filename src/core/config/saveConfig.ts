@@ -5,6 +5,7 @@ import {
   assertRepoOverrideAllowed,
   isJsonObject,
   mergeDeep,
+  OWNER_ONLY_FILE_MODE,
   readJsonObject,
   serializeConfig,
   toJsonObject,
@@ -14,6 +15,7 @@ import {
 import { DEFAULT_CONFIG } from "./schema.js";
 
 const UNSAFE_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
+const REPO_FILE_MODE = 0o644;
 
 export type ConfigTarget =
   | { scope: "global"; path: string }
@@ -24,7 +26,7 @@ export async function setConfigValue(target: ConfigTarget, dottedPath: string, r
   const file = (await readJsonObject(target.path)) ?? {};
   const updated = withValueAt(file, parseSegments(dottedPath, target.path), parseValue(rawValue));
   await assertValid(target, updated);
-  await writeAtomically(target.path, updated);
+  await writeAtomically(target.path, updated, target.scope === "global" ? OWNER_ONLY_FILE_MODE : REPO_FILE_MODE);
 }
 
 export function getValueAt(root: unknown, dottedPath: string): unknown {
@@ -67,9 +69,9 @@ function withValueAt(object: JsonObject, [head, ...rest]: string[], value: unkno
   return { ...object, [head]: withValueAt(isJsonObject(child) ? child : {}, rest, value) };
 }
 
-async function writeAtomically(path: string, content: JsonObject): Promise<void> {
+async function writeAtomically(path: string, content: JsonObject, mode: number): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const temporaryPath = `${path}.${process.pid}.tmp`;
-  await writeFile(temporaryPath, serializeConfig(content));
+  await writeFile(temporaryPath, serializeConfig(content), { mode });
   await rename(temporaryPath, path);
 }

@@ -9,7 +9,7 @@ const isSingleLine = (pattern: string): boolean => !pattern.includes("\n") && !p
 export const providerNameSchema = z.enum(["groq", "gemini", "ollama", "fallback"]);
 
 const cloudProviderSchema = z.strictObject({
-  apiKeyEnv: z.string().min(1).describe("Nom de la variable d'environnement qui contient la clé API"),
+  apiKeyEnv: z.string().min(1).describe("Clé API, ou nom de la variable d'environnement qui la contient"),
   model: z.string().min(1).describe("Modèle utilisé"),
 });
 

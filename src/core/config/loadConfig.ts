@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { ConfigError } from "../errors.js";
@@ -10,6 +10,8 @@ const JSON_INDENT = 2;
 const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export const REPO_CONFIG_FILENAME = ".gitpilot.json";
+export const OWNER_ONLY_FILE_MODE = 0o600;
+const OWNER_ONLY_DIRECTORY_MODE = 0o700;
 
 export function globalConfigPath(home: string = homedir()): string {
   return join(home, ".gitpilot", "config.json");
@@ -19,9 +21,11 @@ export function repoConfigPath(repoRoot: string): string {
   return join(repoRoot, REPO_CONFIG_FILENAME);
 }
 
+/** Lisible par son seul propriétaire : le fichier global peut contenir une clé API, y compris un fichier créé avant cette règle. */
 export async function ensureGlobalConfig(path: string): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, serializeConfig(DEFAULT_CONFIG), { flag: "wx" }).catch(ignoreAlreadyExists);
+  await mkdir(dirname(path), { recursive: true, mode: OWNER_ONLY_DIRECTORY_MODE });
+  await writeFile(path, serializeConfig(DEFAULT_CONFIG), { flag: "wx", mode: OWNER_ONLY_FILE_MODE }).catch(ignoreAlreadyExists);
+  await chmod(path, OWNER_ONLY_FILE_MODE);
 }
 
 export async function loadConfig(paths: { globalPath: string; repoPath?: string | undefined }): Promise<Config> {
