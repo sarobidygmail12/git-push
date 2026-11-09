@@ -1,5 +1,7 @@
 # 🧭 gitpilot
 
+<img width="788" height="532" alt="demo-commit-switch-branch" src="https://github.com/user-attachments/assets/89b715bd-0392-4691-9678-a2fcc50fdbd2" />
+
 🇬🇧 English | [🇫🇷 Français](README.fr.md)
 
 🌐 [Visit the landing page](https://claude.ai/artifact/X84wVTqr1GgwitrGVLjxmp)
