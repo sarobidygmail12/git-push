@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const APP_NAME = "🚀 Gitpilot";
+const APP_NAME = "🚀 Git-push";
 const SAVE_TITLE = "\u001B[22;0t";
 const RESTORE_TITLE = "\u001B[23;0t";
 

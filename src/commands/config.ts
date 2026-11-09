@@ -4,7 +4,7 @@ import { redactApiKeys } from "../core/config/apiKeys.js";
 import { loadConfig, readJsonObject, serializeConfig } from "../core/config/loadConfig.js";
 import { getValueAt, setConfigValue, type ConfigTarget } from "../core/config/saveConfig.js";
 import { DEFAULT_CONFIG, describeConfigOptions, type Config, type ConfigOptionDoc } from "../core/config/schema.js";
-import { ConfigError, GitPilotError } from "../core/errors.js";
+import { ConfigError, GitPushError } from "../core/errors.js";
 import type { Command, CommandContext } from "./types.js";
 import { t } from "../lang/index.js";
 
@@ -106,7 +106,7 @@ async function resolveEditTarget(ctx: CommandContext, path: string, useRepo: boo
 
 function resolveTarget(ctx: CommandContext, useRepo: boolean): ConfigTarget {
   if (!useRepo) return { scope: "global", path: ctx.paths.global };
-  if (!ctx.paths.repo) throw new GitPilotError(t("config.repoNeeded"));
+  if (!ctx.paths.repo) throw new GitPushError(t("config.repoNeeded"));
   return { scope: "repo", path: ctx.paths.repo, globalPath: ctx.paths.global };
 }
 

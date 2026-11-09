@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🚀 gitpilot · {{web.helpTitle}}</title>
+<title>🚀 git-push · {{web.helpTitle}}</title>
 <style>
 :root { color-scheme: light; --bg:#f7f7f5; --panel:#fff; --text:#1d1f23; --muted:#667; --line:#e2e2de; --accent:#0b6bcb; --code:#f0efeb; }
 :root[data-theme="dark"] { color-scheme: dark; --bg:#14161a; --panel:#1c1f25; --text:#e7e8ea; --muted:#969ca8; --line:#2c3038; --accent:#6db3f8; --code:#272b33; }
@@ -31,7 +31,7 @@ th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line);
 </head>
 <body>
 <main>
-  <header><h1>gitpilot</h1><button id="theme" type="button">{{web.theme}}</button></header>
+  <header><h1>git-push</h1><button id="theme" type="button">{{web.theme}}</button></header>
   <nav><a href="/log">{{web.history}}</a><a href="#commandes">{{web.commands}}</a><a href="#configuration">{{web.configuration}}</a></nav>
   <p id="error" hidden></p>
   <h2 id="commandes">{{web.commands}}</h2>
@@ -52,10 +52,10 @@ const element = (tag, text, className) => {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem("gitpilot-theme", theme); } catch {}
+  try { localStorage.setItem("git-push-theme", theme); } catch {}
 }
 function savedTheme() {
-  try { return localStorage.getItem("gitpilot-theme"); } catch { return null; }
+  try { return localStorage.getItem("git-push-theme"); } catch { return null; }
 }
 applyTheme(savedTheme() ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
 document.getElementById("theme").onclick = () =>

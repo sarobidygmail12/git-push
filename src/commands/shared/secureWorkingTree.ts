@@ -20,7 +20,7 @@ export async function secureWorkingTree(ctx: CommandContext, nextStep: string): 
   const action = await ctx.ui.select(t("dirty.question", { count: files.length, next: nextStep }), dirtyTreeChoices());
   if (action === "commit") return (await commitFlow(ctx)) !== "cancelled";
   if (action === "stash") {
-    await ctx.git.run(["stash", "push", "-u", "-m", `gitpilot : avant ${nextStep}`]);
+    await ctx.git.run(["stash", "push", "-u", "-m", `git-push : avant ${nextStep}`]);
     ctx.ui.log(t("dirty.stashed"), "success");
     return true;
   }

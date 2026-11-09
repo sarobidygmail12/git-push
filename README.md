@@ -1,4 +1,4 @@
-# 🧭 gitpilot
+# 🧭 git-push
 
 🇬🇧 English | [🇫🇷 Français](README.fr.md)
 
@@ -6,10 +6,10 @@
 
 Use Git with simple commands, right in your terminal.
 
-You type `/commit`, gitpilot reads your changes, explains them in the commit message, and your work goes to GitHub. New to Git? This page is for you. 👋
+You type `/commit`, git-push reads your changes, explains them in the commit message, and your work goes to GitHub. New to Git? This page is for you. 👋
 
 > [!NOTE]
-> gitpilot's screens are in English by default. Type `/lang` to switch to French, Chinese or German. Commands stay the same in every language.
+> git-push's screens are in English by default. Type `/lang` to switch to French, Chinese or German. Commands stay the same in every language.
 
 ## 🤔 Words to know
 
@@ -27,15 +27,15 @@ You type `/commit`, gitpilot reads your changes, explains them in the commit mes
 
 You need [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org) (version 22.12 or newer) and [Yarn](https://yarnpkg.com/getting-started/install).
 
-**1. Install gitpilot** (Linux or macOS):
+**1. Install git-push** (Linux or macOS):
 
 ```bash
-git clone https://github.com/sarobidygmail12/gitkraken-cli.git gitpilot
-cd gitpilot
+git clone https://github.com/sarobidygmail12/gitkraken-cli.git git-push
+cd git-push
 yarn install
 yarn build
 mkdir -p ~/.local/bin
-ln -s "$PWD/bin/gitpilot.js" ~/.local/bin/gitpilot
+ln -s "$PWD/bin/git-push.js" ~/.local/bin/git-push
 ```
 
 **2. Tell Git who you are.** You only do this once:
@@ -51,22 +51,22 @@ git config --global user.email "you@example.com"
 gh auth login
 ```
 
-gitpilot can't ask you for a password, so you need this step to send your work.
+git-push can't ask you for a password, so you need this step to send your work.
 
 ## 🎬 Your first project, step by step
 
 **1. Create an empty repository** at <https://github.com/new>, then copy its address.
 
-**2. Open your project** in the terminal and start gitpilot:
+**2. Open your project** in the terminal and start git-push:
 
 ```bash
 cd my-project
-gitpilot
+git-push
 ```
 
 **3. Link your folder to GitHub.** Type `/init`, press Enter to keep the suggested folder, then paste the address you copied.
 
-**4. Save and send your work.** Type `/commit`. If gitpilot says `main` is protected, answer yes. It then suggests a message: choose **Accept**.
+**4. Save and send your work.** Type `/commit`. If git-push says `main` is protected, answer yes. It then suggests a message: choose **Accept**.
 
 That's it, your project is on GitHub! 🎉
 
@@ -78,7 +78,7 @@ From then on it's always the same: you work, then you type `/commit`.
 ## 🖥️ Reading the screen
 
 ```text
-gitpilot my-project main (+3, -2, +3)
+git-push my-project main (+3, -2, +3)
 ```
 
 You see the project name, your branch, then your files not saved yet, updated every second:
@@ -87,7 +87,7 @@ You see the project name, your branch, then your files not saved yet, updated ev
 - 🔴 `-2`: 2 files deleted
 - 🟠 `+3`: 3 files modified
 
-The title of your terminal window also shows your branch, like `🚀 Gitpilot : main`.
+The title of your terminal window also shows your branch, like `🚀 Git-push : main`.
 
 The grey lines show the real Git commands run for you. Handy for learning! 👀
 
@@ -110,7 +110,7 @@ The grey lines show the real Git commands run for you. Handy for learning! 👀
 | `/config` | Lists your settings and lets you change them |
 | `/lang` | Changes the language |
 | `/help` | Opens the help |
-| `/exit` | Quits gitpilot |
+| `/exit` | Quits git-push |
 
 ## 🆘 When something goes wrong
 
@@ -128,7 +128,7 @@ Run `gh auth login` in a normal terminal.
 
 **⚔️ A conflict**
 
-Open the file gitpilot names. You'll see this:
+Open the file git-push names. You'll see this:
 
 ```text
 <<<<<<< 
@@ -158,7 +158,7 @@ You're not on any branch. Go back to the main one with `/switch main`.
 
 You're not in a project tracked by Git. Go to the right folder, or type `/init`.
 
-**❓ `gitpilot: command not found`**
+**❓ `git-push: command not found`**
 
 Run these two commands, then open a new terminal:
 
@@ -169,14 +169,14 @@ source ~/.bashrc
 
 ## 🛟 Don't panic
 
-- gitpilot asks before saving on `main`.
+- git-push asks before saving on `main`.
 - It warns you before including a secret file, like a `.env`.
 - It blocks the Git commands that can erase your work.
 - If something fails, it stops and shows the error.
 
 ## 🤖 Turn on AI (optional)
 
-With AI, gitpilot reads your changes and writes a title that explains the commit, then a few sentences about what changed and why:
+With AI, git-push reads your changes and writes a title that explains the commit, then a few sentences about what changed and why:
 
 ```text
 fix(session): discard expired sessions when reading
@@ -184,7 +184,7 @@ fix(session): discard expired sessions when reading
 The session read function now checks if a session's expiration time has passed. If it has, the entry is removed from the store and null is returned.
 ```
 
-Without AI, gitpilot can only describe the files that changed. To turn on Groq, which is free:
+Without AI, git-push can only describe the files that changed. To turn on Groq, which is free:
 
 1. Create a key at <https://console.groq.com/keys>.
 2. Add this line to your `~/.bashrc`, then open a new terminal:
@@ -193,16 +193,16 @@ Without AI, gitpilot can only describe the files that changed. To turn on Groq, 
    export GROQ_API_KEY="your-key"
    ```
 
-   Or type `/config`, open the `ai.groq.apiKeyEnv` line and paste your key there. It is then stored in `~/.gitpilot/config.json`, which only your account can read.
+   Or type `/config`, open the `ai.groq.apiKeyEnv` line and paste your key there. It is then stored in `~/.git-push/config.json`, which only your account can read.
 
-Commit messages are always in English, whatever language gitpilot is in. The suggestion screen shows `(groq)` when the AI wrote the message and `(fallback)` when it didn't.
+Commit messages are always in English, whatever language git-push is in. The suggestion screen shows `(groq)` when the AI wrote the message and `(fallback)` when it didn't.
 
 > [!NOTE]
 > Your changes are sent to Groq to write the message. The content of secret files (`.env*`, `*.pem`, `*.key`, `id_rsa*`) is never sent.
 
 ## 🌍 Change the language
 
-gitpilot speaks English, French, Chinese and German. English is the default.
+git-push speaks English, French, Chinese and German. English is the default.
 
 ```text
 /lang       opens the list of languages
@@ -255,7 +255,7 @@ You don't need this part to get started. Click a title to open it.
 <details>
 <summary>⚙️ Configuration</summary>
 
-The global file `~/.gitpilot/config.json` is created on first launch. A `.gitpilot.json` at the root of a repository can override part of it.
+The global file `~/.git-push/config.json` is created on first launch. A `.git-push.json` at the root of a repository can override part of it.
 
 So that a cloned repository can't hijack your diffs, `apiKeyEnv` and `baseUrl` are only accepted in the global file.
 
@@ -263,13 +263,13 @@ So that a cloned repository can't hijack your diffs, `apiKeyEnv` and `baseUrl` a
 /config                                 lists the options: Enter edits the selected one
 /config show                            shows the effective configuration as JSON
 /config set commit.autoPush false       changes the global file
-/config set --repo branches.develop dev changes .gitpilot.json
+/config set --repo branches.develop dev changes .git-push.json
 /config edit                            opens the file in $VISUAL or $EDITOR
 ```
 
-The `ignore` option is a list of files Git should ignore, in `.gitignore` syntax, with no `.gitignore` to write: `["dist/","*.log"]`. Edit it from `/config`. gitpilot applies it through `.git/info/exclude`. Like `.gitignore`, it has no effect on a file Git already tracks.
+The `ignore` option is a list of files Git should ignore, in `.gitignore` syntax, with no `.gitignore` to write: `["dist/","*.log"]`. Edit it from `/config`. git-push applies it through `.git/info/exclude`. Like `.gitignore`, it has no effect on a file Git already tracks.
 
-`/fix` starts from `branches.preprod` and `/hotfix` from `branches.develop`. If that branch doesn't exist locally, gitpilot asks which one to use and saves your answer in `.gitpilot.json`, which stays out of Git through `.git/info/exclude`.
+`/fix` starts from `branches.preprod` and `/hotfix` from `branches.develop`. If that branch doesn't exist locally, git-push asks which one to use and saves your answer in `.git-push.json`, which stays out of Git through `.git/info/exclude`.
 
 The `/help` page documents every option.
 
@@ -278,7 +278,7 @@ The `/help` page documents every option.
 <details>
 <summary>🤖 Other AI services</summary>
 
-gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves to the next one after 15 seconds, or if the quota is exceeded or the key is missing. The last resort, `fallback`, describes the changed files without AI, so **Regenerate** gives the same message.
+git-push tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves to the next one after 15 seconds, or if the quota is exceeded or the key is missing. The last resort, `fallback`, describes the changed files without AI, so **Regenerate** gives the same message.
 
 **Gemini (free tier).** Create a key at <https://aistudio.google.com/apikey>, then add to your `~/.bashrc`: `export GEMINI_API_KEY="..."`
 
@@ -286,7 +286,7 @@ gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves
 
 The provider receives the list of files and the staged diff, truncated to 12,000 characters. For `.env*`, `*.pem`, `*.key` and `id_rsa*` files, only the name is sent.
 
-`apiKeyEnv` holds the name of an environment variable, which keeps the key out of the file, or the key itself. A key written there stays in plain text in `~/.gitpilot/config.json` and is masked wherever gitpilot shows the configuration.
+`apiKeyEnv` holds the name of an environment variable, which keeps the key out of the file, or the key itself. A key written there stays in plain text in `~/.git-push/config.json` and is masked wherever git-push shows the configuration.
 
 Default models change quickly. If a provider answers `HTTP 404`, change its model: `/config set ai.groq.model <model>`.
 
@@ -296,13 +296,13 @@ Default models change quickly. If a provider answers `HTTP 404`, change its mode
 <summary>🛟 All the safety checks</summary>
 
 - The Git client blocks `push --force`, `reset --hard` and `clean` unless a call has explicitly confirmed.
-- `main` and `preprod` are protected by default: gitpilot asks for confirmation before committing to them.
+- `main` and `preprod` are protected by default: git-push asks for confirmation before committing to them.
 - `/switch` won't change branch with work in progress without offering to commit it or set it aside.
 - `/hotfix` and `/fix` check the name and the base before committing anything.
 - If `develop` has diverged from its remote, `/hotfix` saves the local commits in `backup/<branch>-<hash>`, then aligns `develop` with the remote. `/fix` stops in that case.
 - If a step fails, the flow stops and shows the raw Git error and the repository state.
 - The web server only listens on `127.0.0.1` and refuses requests whose `Host` header isn't local.
-- `~/.gitpilot/config.json` can hold an API key: only your account can read it, and gitpilot masks the key wherever it shows the configuration.
+- `~/.git-push/config.json` can hold an API key: only your account can read it, and git-push masks the key wherever it shows the configuration.
 
 </details>
 
@@ -341,7 +341,7 @@ The autocomplete and the `/help` page update themselves. A `<` in `usage` marks 
 <details>
 <summary>🌍 Translations</summary>
 
-Every text lives in `src/lang/`, with one file per language: `en.json`, `fr.json`, `zh.json` and `de.json`. To change a text, edit the file of that language. `{name}` marks a value filled in by gitpilot, so keep it as it is.
+Every text lives in `src/lang/`, with one file per language: `en.json`, `fr.json`, `zh.json` and `de.json`. To change a text, edit the file of that language. `{name}` marks a value filled in by git-push, so keep it as it is.
 
 Each language must have the same keys and the same `{values}` as `en.json`, otherwise `yarn test` fails.
 

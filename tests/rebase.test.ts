@@ -116,7 +116,7 @@ describe("/rebase", () => {
     await run({ select: "stash" }, ["develop"]);
 
     expect(parent()).toBe(remoteHead);
-    expect(repo.git("stash", "list")).toContain("gitpilot");
+    expect(repo.git("stash", "list")).toContain("git-push");
   });
 
   it("refuse une base hors de la liste", async () => {
@@ -136,10 +136,10 @@ describe("/rebase", () => {
   it("n'envoie jamais à git fetch une base qui ressemble à une option", async () => {
     const config = {
       ...DEFAULT_CONFIG,
-      branches: { ...DEFAULT_CONFIG.branches, develop: "--upload-pack=touch /tmp/gitpilot-pwn" },
+      branches: { ...DEFAULT_CONFIG.branches, develop: "--upload-pack=touch /tmp/git-push-pwn" },
     };
     await expect(
-      rebaseCommand.run(createFakeContext(repo.work, {}, config), ["--upload-pack=touch /tmp/gitpilot-pwn"]),
+      rebaseCommand.run(createFakeContext(repo.work, {}, config), ["--upload-pack=touch /tmp/git-push-pwn"]),
     ).rejects.toThrow("invalide");
   });
 });

@@ -4,7 +4,7 @@ import type { Command, WebServer } from "../commands/types.js";
 import { redactApiKeys } from "../core/config/apiKeys.js";
 import { describeConfigOptions, type Config } from "../core/config/schema.js";
 import { t, translatePage } from "../lang/index.js";
-import { GitPilotError } from "../core/errors.js";
+import { GitPushError } from "../core/errors.js";
 import type { GitClient } from "../core/git/gitClient.js";
 import { getCommitDetails, getLogPage, getRepoOverview, type LogQuery, type LogSearchField } from "../core/git/log.js";
 
@@ -48,9 +48,9 @@ async function start(dependencies: WebServerDependencies): Promise<string> {
   return `http://localhost:${port}`;
 }
 
-/** Deux gitpilot ouverts sur deux dépôts doivent chacun servir le leur. */
+/** Deux git-push ouverts sur deux dépôts doivent chacun servir le leur. */
 async function listenOnFirstFreePort(server: Server, port: number, attemptsLeft: number): Promise<number> {
-  if (attemptsLeft === 0) throw new GitPilotError(t("server.noPort", { port: port - PORT_ATTEMPTS }));
+  if (attemptsLeft === 0) throw new GitPushError(t("server.noPort", { port: port - PORT_ATTEMPTS }));
   try {
     await listen(server, port);
     return port;

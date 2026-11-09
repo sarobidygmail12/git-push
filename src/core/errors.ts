@@ -1,12 +1,12 @@
 import { t } from "../lang/index.js";
-export class GitPilotError extends Error {
+export class GitPushError extends Error {
   constructor(message: string) {
     super(message);
     this.name = new.target.name;
   }
 }
 
-export class GitError extends GitPilotError {
+export class GitError extends GitPushError {
   readonly args: readonly string[];
   readonly exitCode: number | undefined;
   readonly stderr: string;
@@ -19,7 +19,7 @@ export class GitError extends GitPilotError {
   }
 }
 
-export class ConfigError extends GitPilotError {
+export class ConfigError extends GitPushError {
   readonly path: string;
   readonly issues: readonly string[];
 
@@ -32,7 +32,7 @@ export class ConfigError extends GitPilotError {
 
 export type ProviderFailureReason = "timeout" | "quota" | "missing-key" | "unavailable" | "invalid-response";
 
-export class ProviderError extends GitPilotError {
+export class ProviderError extends GitPushError {
   readonly provider: string;
   readonly reason: ProviderFailureReason;
 

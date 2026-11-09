@@ -556,9 +556,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gitpilot@workspace:.":
+"git-push@workspace:.":
   version: 0.0.0-use.local
-  resolution: "gitpilot@workspace:."
+  resolution: "git-push@workspace:."
   dependencies:
     "@types/node": "npm:^22.20.5"
     "@types/react": "npm:^19.3.0"
@@ -572,7 +572,7 @@ __metadata:
     vitest: "npm:^5.1.0"
     zod: "npm:^4.6.7"
   bin:
-    gitpilot: bin/gitpilot.js
+    git-push: bin/git-push.js
   languageName: unknown
   linkType: soft
 

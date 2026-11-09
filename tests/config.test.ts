@@ -1,4 +1,4 @@
-import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -17,9 +17,9 @@ describe("configuration", () => {
   let repoPath: string;
 
   beforeEach(() => {
-    directory = mkdtempSync(join(tmpdir(), "gitpilot-config-"));
+    directory = mkdtempSync(join(tmpdir(), "git-push-config-"));
     globalPath = join(directory, "nested", "config.json");
-    repoPath = join(directory, ".gitpilot.json");
+    repoPath = join(directory, ".git-push.json");
   });
   afterEach(() => rmSync(directory, { recursive: true, force: true }));
 
@@ -36,6 +36,17 @@ describe("configuration", () => {
     await setConfigValue({ scope: "global", path: globalPath }, "commit.autoPush", "false");
     await ensureGlobalConfig(globalPath);
     expect((await loadConfig({ globalPath })).commit.autoPush).toBe(false);
+  });
+
+  it("reprend la configuration de l'ancien dossier ~/.gitpilot", async () => {
+    mkdirSync(join(directory, ".gitpilot"));
+    writeJson(join(directory, ".gitpilot", "config.json"), { commit: { autoPush: false } });
+    const renamedPath = join(directory, ".git-push", "config.json");
+
+    await ensureGlobalConfig(renamedPath);
+
+    expect((await loadConfig({ globalPath: renamedPath })).commit.autoPush).toBe(false);
+    expect(permissionsOf(renamedPath)).toBe(OWNER_ONLY_FILE_MODE);
   });
 
   it("complète un fichier partiel avec les valeurs par défaut", async () => {

@@ -3,8 +3,8 @@ import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import type { GitClient } from "./gitClient.js";
 
-const MANAGED_BLOCK_START = "# >>> gitpilot : option ignore";
-const MANAGED_BLOCK_END = "# <<< gitpilot : option ignore";
+const MANAGED_BLOCK_START = "# >>> git-push : option ignore";
+const MANAGED_BLOCK_END = "# <<< git-push : option ignore";
 
 async function resolveExcludePath(git: GitClient): Promise<string> {
   const { stdout } = await git.run(["rev-parse", "--git-path", "info/exclude"]);
@@ -29,7 +29,7 @@ export async function addLocalExclude(git: GitClient, pattern: string): Promise<
   await appendFile(excludePath, `${lineSeparatorAfter(current)}${pattern}\n`);
 }
 
-/** Aligne le bloc géré par gitpilot sur l'option `ignore`, sans toucher aux autres lignes du fichier. */
+/** Aligne le bloc géré par git-push sur l'option `ignore`, sans toucher aux autres lignes du fichier. */
 export async function syncIgnoredPatterns(git: GitClient, patterns: readonly string[]): Promise<void> {
   const excludePath = await resolveExcludePath(git);
   const current = await readExcludeFile(excludePath);

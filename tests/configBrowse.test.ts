@@ -13,9 +13,9 @@ describe("/config en liste navigable", () => {
   let repoPath: string;
 
   beforeEach(async () => {
-    directory = mkdtempSync(join(tmpdir(), "gitpilot-browse-"));
+    directory = mkdtempSync(join(tmpdir(), "git-push-browse-"));
     globalPath = join(directory, "config.json");
-    repoPath = join(directory, ".gitpilot.json");
+    repoPath = join(directory, ".git-push.json");
     await ensureGlobalConfig(globalPath);
   });
   afterEach(() => rmSync(directory, { recursive: true, force: true }));
