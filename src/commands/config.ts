@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { execa, parseCommandString } from "execa";
 import { loadConfig, readJsonObject, serializeConfig } from "../core/config/loadConfig.js";
 import { getValueAt, setConfigValue, type ConfigTarget } from "../core/config/saveConfig.js";
-import { describeConfigOptions, type Config, type ConfigOptionDoc } from "../core/config/schema.js";
+import { DEFAULT_CONFIG, describeConfigOptions, type Config, type ConfigOptionDoc } from "../core/config/schema.js";
 import { ConfigError, GitPilotError } from "../core/errors.js";
 import type { Command, CommandContext } from "./types.js";
 
@@ -26,13 +26,21 @@ export const configCommand: Command = {
     if (subcommand === "show") return showConfig(ctx);
     if (subcommand === "edit") return editConfig(ctx, useRepo);
     if (subcommand === "set" && path !== undefined && valueParts.length > 0) {
-      await setConfigValue(resolveTarget(ctx, useRepo), path, valueParts.join(" "));
+      await setConfigValue(resolveTarget(ctx, useRepo), path, restoreListQuotes(path, valueParts.join(" ")));
       ctx.ui.log(`${path} mis à jour.`, "success");
       return;
     }
     ctx.ui.log(`Usage : ${configCommand.usage}`, "warn");
   },
 };
+
+/** Le parseur de commandes retire les `"` : `["a","b"]` arrive ici sous la forme `[a,b]`. */
+function restoreListQuotes(path: string, rawValue: string): string {
+  const isBracketed = rawValue.startsWith("[") && rawValue.endsWith("]");
+  if (!isBracketed || !Array.isArray(getValueAt(DEFAULT_CONFIG, path))) return rawValue;
+  const items = rawValue.slice(1, -1).split(",").map((item) => item.trim()).filter((item) => item !== "");
+  return JSON.stringify(items);
+}
 
 function showConfig(ctx: CommandContext): void {
   ctx.ui.log(`${describeLocations(ctx)}\n\n${serializeConfig(ctx.config)}`);

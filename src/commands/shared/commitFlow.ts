@@ -75,7 +75,6 @@ function toMessageInput(ctx: CommandContext, changes: StagedChanges, status: Rep
     files: changes.files,
     branch: status.branch ?? DETACHED_BRANCH_LABEL,
     convention: ctx.config.commit.convention,
-    language: ctx.config.commit.language,
     rejectedMessages: [],
   };
 }
@@ -83,6 +82,9 @@ function toMessageInput(ctx: CommandContext, changes: StagedChanges, status: Rep
 async function chooseMessage(ctx: CommandContext, input: CommitMessageInput): Promise<string | undefined> {
   const generated = await ctx.ui.spinner("Génération du message…", () => ctx.ai.generate(input));
   generated.failures.forEach((failure) => ctx.ui.log(`IA indisponible, ${failure.message}`, "warn"));
+  if (generated.provider === "fallback" && input.rejectedMessages.length > 0) {
+    ctx.ui.log("Sans IA, Régénérer redonne le même message : configure une clé API (GROQ_API_KEY ou GEMINI_API_KEY) ou choisis Modifier.", "warn");
+  }
   return reviewMessage(ctx, input, generated.message, generated.provider);
 }
 

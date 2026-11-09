@@ -35,10 +35,16 @@ describe("configuration", () => {
 
   it("complète un fichier partiel avec les valeurs par défaut", async () => {
     await ensureGlobalConfig(globalPath);
-    writeJson(globalPath, { commit: { language: "en" } });
+    writeJson(globalPath, { commit: { convention: "free" } });
     const config = await loadConfig({ globalPath });
-    expect(config.commit.language).toBe("en");
+    expect(config.commit.convention).toBe("free");
     expect(config.commit.addAll).toBe(true);
+  });
+
+  it("accepte un ancien fichier qui contient encore commit.language", async () => {
+    await ensureGlobalConfig(globalPath);
+    writeJson(globalPath, { commit: { language: "fr" } });
+    expect((await loadConfig({ globalPath })).commit).toEqual(DEFAULT_CONFIG.commit);
   });
 
   it("laisse le fichier du dépôt surcharger le global et remplace les tableaux", async () => {

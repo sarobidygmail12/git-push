@@ -131,6 +131,16 @@ describe("flux sur un vrai dépôt", () => {
     expect(repo.git("log", "-1", "--format=%B")).toBe("fix: titre corrigé\n\n- file.txt : ajoute une ligne");
   });
 
+  it("prévient que Régénérer ne peut rien changer sans IA", async () => {
+    repo.git("switch", "--quiet", "-c", "feature/regenere");
+    repo.write("file.txt", "modifié\n");
+    const ctx = createFakeContext(repo.work, { select: ["regenerate", "accept"] });
+
+    await commitFlow(ctx);
+
+    expect(ctx.ui.log).toHaveBeenCalledWith(expect.stringContaining("Sans IA"), "warn");
+  });
+
   it("committe et pose l'upstream sur une nouvelle branche", async () => {
     repo.git("switch", "--quiet", "-c", "feature/a");
     repo.write("file.txt", "modifié\n");

@@ -183,7 +183,7 @@ Without AI, gitpilot still writes a simple message from your list of files. For 
    export GROQ_API_KEY="your-key"
    ```
 
-Generated messages are in French by default. For English, type `/config set commit.language en`.
+Generated commit messages are always in English.
 
 > [!NOTE]
 > Your changes are sent to Groq to write the message. The content of secret files (`.env*`, `*.pem`, `*.key`, `id_rsa*`) is never sent.
@@ -239,6 +239,8 @@ So that a cloned repository can't hijack your diffs, `apiKeyEnv` and `baseUrl` a
 /config set --repo branches.develop dev changes .gitpilot.json
 /config edit                            opens the file in $VISUAL or $EDITOR
 ```
+
+The `ignore` option is a list of files Git should ignore, in `.gitignore` syntax, with no `.gitignore` to write: `["dist/","*.log"]`. Edit it from `/config`. gitpilot applies it through `.git/info/exclude`. Like `.gitignore`, it has no effect on a file Git already tracks.
 
 `/fix` starts from `branches.preprod` and `/hotfix` from `branches.develop`. If that branch doesn't exist locally, gitpilot asks which one to use and saves your answer in `.gitpilot.json`, which stays out of Git through `.git/info/exclude`.
 

@@ -1,45 +1,12 @@
+import { basename } from "node:path";
 import { splitDiffByFile, summarizeActivity, type FileActivity } from "./diffActions.js";
 import type { CommitMessageInput, CommitMessageProvider } from "./provider.js";
 
 const MAX_NAMES_PER_ACTION = 3;
+const MAX_NAMES_WHEN_SEVERAL_ACTIONS = 2;
+const MAX_DETAIL_LINES = 10;
 const DOC_SUFFIXES = [".md", ".mdx", ".txt"];
 const TEST_MARKERS = [".test.", ".spec.", "tests/", "__tests__/"];
-
-type Wording = {
-  add: string;
-  remove: string;
-  update: string;
-  createFile: string;
-  deleteFile: string;
-  renamedFrom: (path: string) => string;
-  lines: (added: number, removed: number) => string;
-  notAnalyzed: string;
-  files: (verb: string, count: number) => string;
-};
-
-const FRENCH: Wording = {
-  add: "ajoute",
-  remove: "supprime",
-  update: "modifie",
-  createFile: "crée le fichier",
-  deleteFile: "supprime le fichier",
-  renamedFrom: (path) => `renommé depuis ${path}`,
-  lines: (added, removed) => `ajoute ${added} ligne(s), retire ${removed} ligne(s)`,
-  notAnalyzed: "modifié (contenu non analysé)",
-  files: (verb, count) => `${verb} ${count} fichier(s)`,
-};
-
-const ENGLISH: Wording = {
-  add: "add",
-  remove: "remove",
-  update: "update",
-  createFile: "create file",
-  deleteFile: "delete file",
-  renamedFrom: (path) => `renamed from ${path}`,
-  lines: (added, removed) => `add ${added} line(s), remove ${removed} line(s)`,
-  notAnalyzed: "changed (content not analyzed)",
-  files: (verb, count) => `${verb} ${count} file(s)`,
-};
 
 type StagedEntry = CommitMessageInput["files"][number] & { originalPath?: string };
 
@@ -50,74 +17,86 @@ export const fallbackProvider: CommitMessageProvider = {
   generate: (input) => Promise.resolve(buildFallbackMessage(input)),
 };
 
-/** Sans IA, décrit ce que le diff montre : déclarations ajoutées, retirées ou touchées dans chaque fichier. */
+/** Sans IA, résume les fichiers touchés dans le titre et ce que le diff montre de chacun dans le détail. */
 export function buildFallbackMessage(input: CommitMessageInput): string {
-  const wording = input.language.startsWith("fr") ? FRENCH : ENGLISH;
   const sections = splitDiffByFile(input.diff);
   const actions = input.files.map((entry): FileAction => {
     const lines = sections.get(entry.path);
     return { entry, activity: lines ? summarizeActivity(lines) : undefined };
   });
 
-  const summary = describeOverall(actions, wording);
-  const subject = input.convention === "conventional" ? `${guessType(input)}: ${summary}` : summary;
-  const details = actions.map((action) => `- ${action.entry.path} : ${describeFile(action, wording)}`);
-  return `${subject}\n\n${details.join("\n")}`;
+  const summary = describeOverall(actions);
+  const subject = input.convention === "conventional" ? `${guessType(input)}: ${summary}` : capitalize(summary);
+  return `${subject}\n\n${describeDetails(actions).join("\n")}`;
 }
 
-function describeOverall(actions: readonly FileAction[], wording: Wording): string {
-  const activities = actions.flatMap((action) => action.activity ?? []);
-  const named = describeNamedChanges(
-    {
-      added: activities.flatMap((activity) => activity.added),
-      removed: activities.flatMap((activity) => activity.removed),
-      modified: activities.flatMap((activity) => activity.modified),
-      addedLines: 0,
-      removedLines: 0,
-    },
-    wording,
-  );
-  return named || wording.files(chooseVerb(actions, wording), actions.length);
+function describeOverall(actions: readonly FileAction[]): string {
+  const groups = [
+    { verb: "add", entries: entriesWithStatus(actions, ["A"]) },
+    { verb: "remove", entries: entriesWithStatus(actions, ["D"]) },
+    { verb: "rename", entries: entriesWithStatus(actions, ["R"]) },
+    { verb: "update", entries: actions.map((action) => action.entry).filter((entry) => !["A", "D", "R"].includes(entry.status)) },
+  ].filter((group) => group.entries.length > 0);
+  const limit = groups.length > 1 ? MAX_NAMES_WHEN_SEVERAL_ACTIONS : MAX_NAMES_PER_ACTION;
+  return groups.map((group) => `${group.verb} ${listNames(group.entries.map((entry) => shortLabel(entry.path)), limit)}`).join(", ");
 }
 
-function chooseVerb(actions: readonly FileAction[], wording: Wording): string {
-  if (actions.every((action) => action.entry.status === "A")) return wording.add;
-  if (actions.every((action) => action.entry.status === "D")) return wording.remove;
-  return wording.update;
+function entriesWithStatus(actions: readonly FileAction[], statuses: readonly string[]): StagedEntry[] {
+  return actions.map((action) => action.entry).filter((entry) => statuses.includes(entry.status));
 }
 
-function describeFile({ entry, activity }: FileAction, wording: Wording): string {
-  if (entry.status === "D") return wording.deleteFile;
-  const changes = activity ? describeChanges(activity, wording) : "";
-  if (entry.status === "A") return changes ? `${wording.createFile}, ${changes}` : wording.createFile;
-  if (entry.status === "R") {
-    const renamed = wording.renamedFrom(entry.originalPath ?? "?");
-    return activity && changes ? `${renamed}, ${changes}` : renamed;
-  }
-  return changes || wording.notAnalyzed;
+function listNames(names: readonly string[], limit: number): string {
+  const unique = [...new Set(names)];
+  const shown = unique.slice(0, limit);
+  const hiddenCount = unique.length - shown.length;
+  if (hiddenCount > 0) return `${shown.join(", ")} and ${hiddenCount} more`;
+  const last = shown.at(-1) ?? "";
+  return shown.length > 1 ? `${shown.slice(0, -1).join(", ")} and ${last}` : last;
 }
 
-function describeChanges(activity: FileActivity, wording: Wording): string {
-  const named = describeNamedChanges(activity, wording);
-  if (named) return named;
-  return activity.addedLines + activity.removedLines > 0 ? wording.lines(activity.addedLines, activity.removedLines) : "";
+/** `src/commands/config.test.ts` devient « config tests » : le chemin complet reste dans le détail. */
+function shortLabel(path: string): string {
+  const fileName = basename(path);
+  const name = fileName.split(".")[0] || fileName;
+  return TEST_MARKERS.some((marker) => path.includes(marker)) ? `${name} tests` : name;
 }
 
-function describeNamedChanges(activity: FileActivity, wording: Wording): string {
-  return [
-    formatNames(wording.add, activity.added),
-    formatNames(wording.remove, activity.removed),
-    formatNames(wording.update, activity.modified),
-  ]
+function capitalize(text: string): string {
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+}
+
+function describeDetails(actions: readonly FileAction[]): string[] {
+  const shown = actions.slice(0, MAX_DETAIL_LINES).map((action) => `- ${describeFile(action)}`);
+  const hiddenCount = actions.length - shown.length;
+  return hiddenCount > 0 ? [...shown, `- and ${hiddenCount} more file(s)`] : shown;
+}
+
+function describeFile({ entry, activity }: FileAction): string {
+  if (entry.status === "D") return `Remove ${entry.path}`;
+  return `${describeFileAction(entry)}${describeChanges(activity)}`;
+}
+
+function describeFileAction(entry: StagedEntry): string {
+  if (entry.status === "A") return `Add ${entry.path}`;
+  if (entry.status === "R") return `Rename ${entry.originalPath ?? "?"} to ${entry.path}`;
+  return `Update ${entry.path}`;
+}
+
+function describeChanges(activity: FileActivity | undefined): string {
+  if (!activity) return "";
+  const named = describeNamedChanges(activity);
+  if (named) return `: ${named}`;
+  return activity.addedLines + activity.removedLines > 0 ? ` (+${activity.addedLines} -${activity.removedLines})` : "";
+}
+
+function describeNamedChanges(activity: FileActivity): string {
+  return [formatNames("add", activity.added), formatNames("remove", activity.removed), formatNames("update", activity.modified)]
     .filter((part) => part !== "")
     .join(", ");
 }
 
 function formatNames(verb: string, names: readonly string[]): string {
-  if (names.length === 0) return "";
-  const unique = [...new Set(names)];
-  const listed = unique.slice(0, MAX_NAMES_PER_ACTION).join(", ");
-  return `${verb} ${listed}${unique.length > MAX_NAMES_PER_ACTION ? "…" : ""}`;
+  return names.length === 0 ? "" : `${verb} ${listNames(names, MAX_NAMES_PER_ACTION)}`;
 }
 
 function guessType(input: CommitMessageInput): string {

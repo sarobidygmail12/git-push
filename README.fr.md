@@ -235,6 +235,8 @@ Pour qu'un dépôt cloné ne puisse pas détourner tes diffs, `apiKeyEnv` et `ba
 /config edit                            ouvre le fichier dans $VISUAL ou $EDITOR
 ```
 
+L'option `ignore` est la liste des fichiers que Git doit ignorer, avec la syntaxe de `.gitignore`, sans `.gitignore` à écrire : `["dist/","*.log"]`. Modifie-la depuis `/config`. gitpilot l'applique via `.git/info/exclude`. Comme avec `.gitignore`, un fichier déjà suivi par Git n'est pas concerné.
+
 `/fix` part de `branches.preprod` et `/hotfix` de `branches.develop`. Si cette branche n'existe pas localement, gitpilot demande laquelle utiliser et enregistre ta réponse dans `.gitpilot.json`, qui reste hors de Git grâce à `.git/info/exclude`.
 
 La page `/help` documente chaque option.

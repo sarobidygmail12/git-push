@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG, type Config } from "../core/config/schema.js";
 import { loadConfig, repoConfigPath } from "../core/config/loadConfig.js";
 import { ConfigError, GitError, GitPilotError } from "../core/errors.js";
 import { createGitClient, type GitClient } from "../core/git/gitClient.js";
+import { syncIgnoredPatterns } from "../core/git/localExclude.js";
 import { countChanges, describeBranch, describeRepoState, getRepoRoot, getStatus, type ChangeCounts } from "../core/git/status.js";
 import { createWebServer } from "../web/server.js";
 import { parseInput } from "./parseInput.js";
@@ -56,9 +57,22 @@ export function createSession(options: SessionOptions): ReplSession {
     exit,
   });
 
+  const applyIgnoredFiles = async (): Promise<void> => {
+    if (!(await resolvePaths()).repo) return;
+    try {
+      await syncIgnoredPatterns(silentGit, (await readConfig()).ignore);
+    } catch (error) {
+      // Une config invalide est signalée par la commande : on garde les motifs déjà appliqués.
+      if (!(error instanceof ConfigError)) throw error;
+    }
+  };
+
   const runCommand = async (command: Command, args: string[]): Promise<void> => {
+    await applyIgnoredFiles();
     const config = await resolveConfig(command, readConfig, ui);
     await command.run(buildContext(git, config, await resolvePaths()), args);
+    // Après /config ou /init : l'en-tête reflète les nouveaux motifs sans attendre la commande suivante.
+    await applyIgnoredFiles();
   };
 
   return {

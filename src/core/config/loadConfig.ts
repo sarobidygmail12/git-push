@@ -44,12 +44,19 @@ export async function readJsonObject(path: string): Promise<JsonObject | undefin
 }
 
 export function validateConfig(candidate: unknown, sourcePath: string): Config {
-  const result = configSchema.safeParse(candidate);
+  const result = configSchema.safeParse(withoutRetiredOptions(candidate));
   if (result.success) return result.data;
   throw new ConfigError(
     sourcePath,
     result.error.issues.map((issue) => `${issue.path.join(".") || "(racine)"} : ${issue.message}`),
   );
+}
+
+/** `commit.language` n'existe plus, les messages sont toujours en anglais : un ancien fichier qui la contient reste valide. */
+function withoutRetiredOptions(candidate: unknown): unknown {
+  if (!isJsonObject(candidate) || !isJsonObject(candidate["commit"])) return candidate;
+  const { language: _retired, ...commit } = candidate["commit"];
+  return { ...candidate, commit };
 }
 
 /** Un dépôt cloné ne doit pas pouvoir rediriger les diffs ni choisir la variable d'environnement lue. */

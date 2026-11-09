@@ -9,7 +9,6 @@ export type CommitMessageInput = {
   files: readonly { path: string; status: string }[];
   branch: string;
   convention: "conventional" | "free";
-  language: string;
   rejectedMessages: readonly string[];
 };
 

@@ -1,8 +1,10 @@
 import { z } from "zod";
 
-const MIN_LANGUAGE_CODE_LENGTH = 2;
 const MAX_TCP_PORT = 65535;
 const DEFAULT_WEB_PORT = 4517;
+
+// Chaque motif devient une ligne de .git/info/exclude : un saut de ligne en créerait d'autres.
+const isSingleLine = (pattern: string): boolean => !pattern.includes("\n") && !pattern.includes("\r");
 
 export const providerNameSchema = z.enum(["groq", "gemini", "ollama", "fallback"]);
 
@@ -24,10 +26,12 @@ export const configSchema = z.strictObject({
   }),
   commit: z.strictObject({
     convention: z.enum(["conventional", "free"]).describe("Format des messages générés"),
-    language: z.string().min(MIN_LANGUAGE_CODE_LENGTH).describe("Langue des messages générés (fr, en…)"),
     autoPush: z.boolean().describe("Pousser automatiquement après un commit"),
     addAll: z.boolean().describe("Indexer toutes les modifications avant un commit"),
   }),
+  ignore: z
+    .array(z.string().min(1).refine(isSingleLine, "un motif doit tenir sur une ligne"))
+    .describe('Fichiers que Git doit ignorer, sans .gitignore. Exemple : ["dist/","*.log"]'),
   ai: z.strictObject({
     provider: providerNameSchema.describe("Provider essayé en premier"),
     fallbackOrder: z.array(providerNameSchema).describe("Providers essayés ensuite, dans l'ordre"),
@@ -49,7 +53,8 @@ export type ProviderName = z.infer<typeof providerNameSchema>;
 export const DEFAULT_CONFIG: Config = {
   branches: { develop: "develop", preprod: "preprod", main: "main", protected: ["main", "preprod"] },
   prefixes: { hotfix: "hotfix/", fix: "fix/" },
-  commit: { convention: "conventional", language: "fr", autoPush: true, addAll: true },
+  commit: { convention: "conventional", autoPush: true, addAll: true },
+  ignore: [],
   ai: {
     provider: "groq",
     fallbackOrder: ["groq", "gemini", "ollama", "fallback"],

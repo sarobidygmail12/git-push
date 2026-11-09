@@ -29,14 +29,14 @@ describe("/config en liste navigable", () => {
   const saved = () => loadConfig({ globalPath, repoPath });
 
   it("Entrée sur une option modifie sa valeur dans le fichier global", async () => {
-    await browse({ select: ["commit.language"], ask: ["en"] });
-    expect((await saved()).commit.language).toBe("en");
+    await browse({ select: ["commit.convention"], ask: ["free"] });
+    expect((await saved()).commit.convention).toBe("free");
   });
 
   it("enchaîne plusieurs modifications avant de quitter", async () => {
-    await browse({ select: ["commit.language", "branches.preprod"], ask: ["en", "staging"] });
+    await browse({ select: ["commit.convention", "branches.preprod"], ask: ["free", "staging"] });
     const config = await saved();
-    expect(config.commit.language).toBe("en");
+    expect(config.commit.convention).toBe("free");
     expect(config.branches.preprod).toBe("staging");
   });
 
@@ -54,19 +54,19 @@ describe("/config en liste navigable", () => {
 
   it("n'écrit rien si la saisie est annulée ou inchangée", async () => {
     const before = readFileSync(globalPath, "utf8");
-    await browse({ select: ["commit.language", "branches.main"], ask: [undefined, "main"] as string[] });
+    await browse({ select: ["commit.convention", "branches.main"], ask: [undefined, "main"] as string[] });
     expect(readFileSync(globalPath, "utf8")).toBe(before);
   });
 
   it("signale une valeur invalide, laisse le fichier intact et revient à la liste", async () => {
     const before = readFileSync(globalPath, "utf8");
-    const ctx = contextWith({ select: ["ai.provider", "commit.language"], ask: ["inconnu", "en"] });
+    const ctx = contextWith({ select: ["ai.provider", "commit.convention"], ask: ["inconnu", "free"] });
     await configCommand.run(ctx, []);
 
     expect(ctx.ui.log).toHaveBeenCalledWith(expect.stringContaining("ai.provider"), "error");
-    expect(before).not.toContain('"language": "en"');
+    expect(before).not.toContain('"convention": "free"');
     expect((await saved()).ai.provider).toBe("groq");
-    expect((await saved()).commit.language).toBe("en");
+    expect((await saved()).commit.convention).toBe("free");
   });
 
   it("modifie dans le dépôt une option que le dépôt définit déjà", async () => {

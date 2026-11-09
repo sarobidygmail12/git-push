@@ -2,13 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildFallbackMessage } from "../src/core/ai/fallback.js";
 import { createCommitMessageGenerator, resolveProviderOrder } from "../src/core/ai/generator.js";
 import { createGroqProvider } from "../src/core/ai/groq.js";
-import { sanitizeMessage } from "../src/core/ai/prompt.js";
+import { buildPrompt, sanitizeMessage } from "../src/core/ai/prompt.js";
 import type { CommitMessageInput, CommitMessageProvider, ProviderName } from "../src/core/ai/provider.js";
 import { DEFAULT_CONFIG } from "../src/core/config/schema.js";
 import { ProviderError } from "../src/core/errors.js";
 
 const SHORT_TIMEOUT_MS = 5;
 const HTTP_TOO_MANY_REQUESTS = 429;
+const FILE_COUNT_OVER_DETAIL_LIMIT = 12;
 
 const INPUT: CommitMessageInput = {
   diff: "diff",
@@ -16,7 +17,6 @@ const INPUT: CommitMessageInput = {
   files: [{ path: "src/a.ts", status: "M" }],
   branch: "main",
   convention: "conventional",
-  language: "fr",
   rejectedMessages: [],
 };
 
@@ -127,18 +127,38 @@ describe("nettoyage et message sans IA", () => {
 
     expect(buildFallbackMessage({ ...INPUT, diff, files })).toBe(
       [
-        "chore: ajoute valider, supprime ancien, modifie total",
+        "chore: update a and b",
         "",
-        "- src/a.ts : ajoute valider, supprime ancien, modifie total",
-        "- src/b.ts : ajoute 1 ligne(s), retire 0 ligne(s)",
+        "- Update src/a.ts: add valider, remove ancien, update total",
+        "- Update src/b.ts (+1 -0)",
       ].join("\n"),
     );
   });
 
-  it("ne cite pas les fichiers dans le titre quand aucune déclaration n'est reconnue", () => {
-    const files = [{ path: "a.txt", status: "M" }, { path: "b.bin", status: "M" }];
+  it("résume les fichiers touchés dans le titre et en limite le nombre", () => {
+    const files = [
+      { path: "src/neuf.ts", status: "A" },
+      { path: "src/a.ts", status: "M" },
+      { path: "src/b.ts", status: "M" },
+      { path: "tests/c.test.ts", status: "M" },
+    ];
     const [subject] = buildFallbackMessage({ ...INPUT, diff: "", files }).split("\n");
-    expect(subject).toBe("chore: modifie 2 fichier(s)");
+    expect(subject).toBe("chore: add neuf, update a, b and 1 more");
+  });
+
+  it("met une majuscule et aucun préfixe en convention libre", () => {
+    const [subject] = buildFallbackMessage({ ...INPUT, convention: "free" }).split("\n");
+    expect(subject).toBe("Update a");
+  });
+
+  it("garde un détail court sur un gros commit", () => {
+    const files = Array.from({ length: FILE_COUNT_OVER_DETAIL_LIMIT }, (_unused, index) => ({ path: `src/f${index}.ts`, status: "M" }));
+    const lines = buildFallbackMessage({ ...INPUT, diff: "", files }).split("\n");
+    expect(lines.at(-1)).toBe("- and 2 more file(s)");
+  });
+
+  it("écrit en anglais dans le prompt, quelle que soit la langue du diff", () => {
+    expect(buildPrompt(INPUT).system).toContain("Always write in English");
   });
 
   it("décrit créations, suppressions, renommages et contenus non analysés", () => {
@@ -149,16 +169,11 @@ describe("nettoyage et message sans IA", () => {
       { path: ".env", status: "M" },
     ];
     const details = buildFallbackMessage({ ...INPUT, diff: "", files }).split("\n").slice(1 + 1);
-    expect(details).toEqual([
-      "- neuf.ts : crée le fichier",
-      "- vieux.ts : supprime le fichier",
-      "- nouveau.ts : renommé depuis ancien.ts",
-      "- .env : modifié (contenu non analysé)",
-    ]);
+    expect(details).toEqual(["- Add neuf.ts", "- Remove vieux.ts", "- Rename ancien.ts to nouveau.ts", "- Update .env"]);
   });
 
-  it("reconnaît la documentation et respecte la langue", () => {
+  it("reconnaît la documentation", () => {
     const files = [{ path: "README.md", status: "A" }];
-    expect(buildFallbackMessage({ ...INPUT, files, language: "en" })).toBe("docs: add 1 file(s)\n\n- README.md : create file");
+    expect(buildFallbackMessage({ ...INPUT, files })).toBe("docs: add README\n\n- Add README.md");
   });
 });
