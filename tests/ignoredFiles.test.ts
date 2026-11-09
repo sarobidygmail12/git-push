@@ -58,12 +58,12 @@ describe("option ignore", () => {
   });
 
   it("retire le bloc quand la liste est vide et garde les autres lignes", async () => {
-    await addLocalExclude(createGitClient({ cwd: repo.work }), "/.gitpilot.json");
+    await addLocalExclude(createGitClient({ cwd: repo.work }), "/.git-push.json");
     await sync(["*.log"]);
     await sync([]);
 
-    expect(excludeFile()).toContain("/.gitpilot.json");
-    expect(excludeFile()).not.toContain("gitpilot : option ignore");
+    expect(excludeFile()).toContain("/.git-push.json");
+    expect(excludeFile()).not.toContain("git-push : option ignore");
   });
 
   it("ne duplique pas le bloc quand la liste ne change pas", async () => {

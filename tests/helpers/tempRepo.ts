@@ -18,7 +18,7 @@ function runGit(cwd: string, args: readonly string[]): string {
 
 /** Crée un clone de travail relié à un remote nu, avec main, develop et preprod poussées. */
 export function createTempRepo(): TempRepo {
-  const root = mkdtempSync(join(tmpdir(), "gitpilot-test-"));
+  const root = mkdtempSync(join(tmpdir(), "git-push-test-"));
   const origin = join(root, "origin.git");
   const work = join(root, "work");
   runGit(root, ["init", "--quiet", "--bare", "--initial-branch=main", origin]);

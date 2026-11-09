@@ -9,7 +9,7 @@ export function Header({ state, folder }: { state: HeaderState | undefined; fold
   return (
     <Box columnGap={1}>
       <Text bold color="cyan">
-        gitpilot
+        git-push
       </Text>
       <Text dimColor>{folder}</Text>
       {state ? <RepoSummary state={state} /> : <Text color="yellow">{t("ui.notRepo")}</Text>}

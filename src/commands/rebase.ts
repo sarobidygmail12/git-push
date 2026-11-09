@@ -54,7 +54,7 @@ async function chooseBase(ctx: CommandContext, requestedBase: string | undefined
 }
 
 async function rebaseOnLatest(ctx: CommandContext, base: string): Promise<void> {
-  // La base peut venir d'un .gitpilot.json : un nom comme `--upload-pack=…` ne doit jamais atteindre git fetch.
+  // La base peut venir d'un .git-push.json : un nom comme `--upload-pack=…` ne doit jamais atteindre git fetch.
   if (!(await isValidBranchName(ctx.git, base))) throw new GitError(t("branch.invalidName", { name: base }));
   const { branch } = await getStatus(ctx.git);
   if (!branch) throw new GitError(t("head.switchFirst"));

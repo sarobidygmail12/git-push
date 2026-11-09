@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🚀 gitpilot · {{web.graphTitle}}</title>
+<title>🚀 git-push · {{web.graphTitle}}</title>
 <style>
 :root { color-scheme:light; --bg:#f3f4f6; --panel:#fff; --raised:#e9ebef; --text:#1d2129; --muted:#667085; --line:#dfe2e8; --accent:#1570ef; --hover:#eceef2; --selected:#d9e7fd; --head:#fff4d6; --add:#12845a; --del:#d0342c; --on-avatar:#fff; }
 :root[data-theme="dark"] { color-scheme:dark; --bg:#16181d; --panel:#1e2128; --raised:#2a2e37; --text:#e6e8ec; --muted:#8f97a6; --line:#2e323c; --accent:#5ba4f7; --hover:#262a33; --selected:#23364f; --head:#332c17; --add:#45c98f; --del:#f2726a; --on-avatar:#fff; }
@@ -113,7 +113,7 @@ h3 { font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(-
 <body>
 <header class="topbar">
   <button id="menu" class="toolbar-button" type="button" aria-label="{{web.showBranches}}">☰</button>
-  <span id="repo" class="repo">gitpilot</span>
+  <span id="repo" class="repo">git-push</span>
   <button id="current" class="current" type="button" title="{{web.goToHead}}" hidden></button>
   <span id="filter-chip" class="chip" hidden><span id="filter-text"></span><button id="filter-clear" type="button" aria-label="{{web.removeFilter}}">×</button></span>
   <form id="filters" role="search">
@@ -180,10 +180,10 @@ function avatar(name) {
 /* ---- Thème ---- */
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem("gitpilot-theme", theme); } catch {}
+  try { localStorage.setItem("git-push-theme", theme); } catch {}
 }
 function savedTheme() {
-  try { return localStorage.getItem("gitpilot-theme"); } catch { return null; }
+  try { return localStorage.getItem("git-push-theme"); } catch { return null; }
 }
 applyTheme(savedTheme() ?? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
 byId("theme").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
@@ -633,7 +633,7 @@ async function loadRepo() {
   if (!response.ok) throw new Error(data.error);
   repo = data;
   byId("repo").textContent = repo.name;
-  document.title = "🚀 " + repo.name + " · gitpilot";
+  document.title = "🚀 " + repo.name + " · git-push";
   renderCurrentBranch();
   renderSidebar();
 }

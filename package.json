@@ -1,10 +1,10 @@
 {
-  "name": "gitpilot",
+  "name": "git-push",
   "version": "0.1.0",
   "description": "CLI interactif pour le Git du quotidien",
   "private": true,
   "type": "module",
-  "bin": "bin/gitpilot.js",
+  "bin": "bin/git-push.js",
   "files": [
     "bin",
     "dist"
@@ -16,7 +16,7 @@
     "build": "tsc -p tsconfig.json && node scripts/copy-pages.mjs",
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run",
-    "start": "node bin/gitpilot.js",
+    "start": "node bin/git-push.js",
     "prepare": "npm run build"
   },
   "dependencies": {

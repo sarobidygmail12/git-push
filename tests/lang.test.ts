@@ -68,7 +68,7 @@ describe("/lang", () => {
   let globalPath: string;
 
   beforeEach(() => {
-    directory = mkdtempSync(join(tmpdir(), "gitpilot-lang-"));
+    directory = mkdtempSync(join(tmpdir(), "git-push-lang-"));
     globalPath = join(directory, "config.json");
     writeFileSync(globalPath, "{}\n");
   });

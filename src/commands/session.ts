@@ -1,7 +1,7 @@
 import { createGeneratorFromConfig } from "../core/ai/generator.js";
 import { DEFAULT_CONFIG, type Config } from "../core/config/schema.js";
 import { loadConfig, repoConfigPath } from "../core/config/loadConfig.js";
-import { ConfigError, GitError, GitPilotError } from "../core/errors.js";
+import { ConfigError, GitError, GitPushError } from "../core/errors.js";
 import { createGitClient, type GitClient } from "../core/git/gitClient.js";
 import { syncIgnoredPatterns } from "../core/git/localExclude.js";
 import { countChanges, describeBranch, describeRepoState, getRepoRoot, getStatus, type ChangeCounts } from "../core/git/status.js";
@@ -111,7 +111,7 @@ async function resolveConfig(command: Command, readConfig: () => Promise<Config>
 }
 
 async function reportError(error: unknown, ui: CommandUi, silentGit: GitClient): Promise<void> {
-  if (!(error instanceof GitPilotError)) {
+  if (!(error instanceof GitPushError)) {
     ui.log(`Erreur inattendue : ${error instanceof Error ? error.message : String(error)}`, "error");
     return;
   }
