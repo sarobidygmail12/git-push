@@ -1,8 +1,11 @@
 import type { Command } from "./types.js";
+import { t } from "../lang/index.js";
 
 export const clearCommand: Command = {
   name: "clear",
-  description: "Efface l'écran",
+  get description() {
+    return t("cmd.clear");
+  },
   usage: "/clear",
   examples: ["/clear"],
   gitSteps: [],

@@ -1,24 +1,27 @@
 import { getStatus } from "../../core/git/status.js";
 import type { CommandContext } from "../types.js";
 import { commitFlow } from "./commitFlow.js";
+import { t } from "../../lang/index.js";
 
 type DirtyTreeAction = "commit" | "stash";
 
-const DIRTY_TREE_CHOICES = [
-  { label: "Committer (flux /commit)", value: "commit" },
-  { label: "Mettre de côté (git stash)", value: "stash" },
-] as const satisfies ReadonlyArray<{ label: string; value: DirtyTreeAction }>;
+function dirtyTreeChoices(): ReadonlyArray<{ label: string; value: DirtyTreeAction }> {
+  return [
+    { label: t("dirty.commit"), value: "commit" },
+    { label: t("dirty.stash"), value: "stash" },
+  ];
+}
 
 /** Renvoie false si l'utilisateur renonce : les modifications en cours restent alors intactes. */
 export async function secureWorkingTree(ctx: CommandContext, nextStep: string): Promise<boolean> {
   const { files } = await getStatus(ctx.git);
   if (files.length === 0) return true;
 
-  const action = await ctx.ui.select(`${files.length} fichier(s) modifié(s). Que faire avant ${nextStep} ?`, DIRTY_TREE_CHOICES);
+  const action = await ctx.ui.select(t("dirty.question", { count: files.length, next: nextStep }), dirtyTreeChoices());
   if (action === "commit") return (await commitFlow(ctx)) !== "cancelled";
   if (action === "stash") {
     await ctx.git.run(["stash", "push", "-u", "-m", `gitpilot : avant ${nextStep}`]);
-    ctx.ui.log("Modifications mises de côté. Récupère-les avec /stash pop.", "success");
+    ctx.ui.log(t("dirty.stashed"), "success");
     return true;
   }
   return false;

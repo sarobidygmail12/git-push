@@ -2,6 +2,7 @@ import { basename } from "node:path";
 import { GitError } from "../errors.js";
 import type { GitClient } from "./gitClient.js";
 import { listRefs, LOCAL_PREFIX, REMOTE_PREFIX, shortRefName } from "./branches.js";
+import { t } from "../../lang/index.js";
 
 export const LOG_PAGE_SIZE = 100;
 
@@ -248,7 +249,7 @@ export function parseShortlog(output: string): { name: string; commits: number }
 }
 
 export async function getCommitDetails(git: GitClient, hash: string): Promise<CommitDetails> {
-  if (!isCommitHash(hash)) throw new GitError(`Hash de commit invalide : ${hash}`);
+  if (!isCommitHash(hash)) throw new GitError(t("log.invalidHash", { hash }));
   const [metadata, stats, containing] = await Promise.all([
     git.run(["show", "--no-patch", "--format=%cn%x1f%b", hash, "--"]),
     git.run(["-c", "core.quotePath=false", "show", "--format=", "--numstat", "-m", "--first-parent", hash, "--"]),

@@ -1,3 +1,4 @@
+import { t } from "../lang/index.js";
 export class GitPilotError extends Error {
   constructor(message: string) {
     super(message);
@@ -23,7 +24,7 @@ export class ConfigError extends GitPilotError {
   readonly issues: readonly string[];
 
   constructor(path: string, issues: readonly string[]) {
-    super(`Configuration invalide (${path}) :\n${issues.map((issue) => `  - ${issue}`).join("\n")}`);
+    super(t("config.invalid", { path, issues: issues.map((issue) => `  - ${issue}`).join("\n") }));
     this.path = path;
     this.issues = issues;
   }

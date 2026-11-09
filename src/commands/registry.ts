@@ -4,6 +4,7 @@ import { cherryPickCommand } from "./cherryPick.js";
 import { clearCommand } from "./clear.js";
 import { commitCommand } from "./commit.js";
 import { configCommand } from "./config.js";
+import { langCommand } from "./lang.js";
 import { diffCommand } from "./diff.js";
 import { exitCommand } from "./exit.js";
 import { fetchCommand } from "./fetch.js";
@@ -44,6 +45,7 @@ export const commands: readonly Command[] = [
   fetchCommand,
   stashCommand,
   configCommand,
+  langCommand,
   helpCommand,
   clearCommand,
   exitCommand,

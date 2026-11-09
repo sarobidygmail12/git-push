@@ -1,6 +1,7 @@
 import { GitError } from "../errors.js";
 import type { GitClient } from "./gitClient.js";
 import { assertNoOperationInProgress, getStatus, type RepoStatus } from "./status.js";
+import { t } from "../../lang/index.js";
 
 export const REMOTE_PREFIX = "refs/remotes/";
 export const LOCAL_PREFIX = "refs/heads/";
@@ -45,16 +46,16 @@ export async function hasRemote(git: GitClient): Promise<boolean> {
 }
 
 export async function pushCurrentBranch(git: GitClient, status: RepoStatus): Promise<void> {
-  if (!status.branch) throw new GitError("HEAD détaché : rien à pousser.");
+  if (!status.branch) throw new GitError(t("head.nothingToPush"));
   await git.run(status.upstream ? ["push"] : ["push", "-u", "origin", status.branch]);
 }
 
 /** À appeler avant tout effet de bord, pour qu'un nom refusé ne laisse pas un commit derrière lui. */
 export async function assertCanStartBranch(git: GitClient, base: string, branchName: string): Promise<void> {
   await assertNoOperationInProgress(git);
-  if (!(await isValidBranchName(git, branchName))) throw new GitError(`Nom de branche invalide : ${branchName}`);
-  if (!(await branchExists(git, base))) throw new GitError(`La branche de base « ${base} » n'existe pas localement.`);
-  if (await branchExists(git, branchName)) throw new GitError(`La branche « ${branchName} » existe déjà.`);
+  if (!(await isValidBranchName(git, branchName))) throw new GitError(t("branch.invalidName", { name: branchName }));
+  if (!(await branchExists(git, base))) throw new GitError(t("branch.baseMissing", { base }));
+  if (await branchExists(git, branchName)) throw new GitError(t("branch.exists", { name: branchName }));
 }
 
 export type StartedBranch = { branch: string; steps: readonly string[]; backupBranch?: string };
@@ -116,6 +117,6 @@ async function forceBaseToUpstream(git: GitClient, base: string, headHash: strin
 async function assertCleanWorkingTree(git: GitClient): Promise<void> {
   const { files } = await getStatus(git);
   if (files.length > 0) {
-    throw new GitError(`Working tree non propre (${files.length} fichier(s)) : aucun changement de branche effectué.`);
+    throw new GitError(t("branch.dirtyTree", { count: files.length }));
   }
 }

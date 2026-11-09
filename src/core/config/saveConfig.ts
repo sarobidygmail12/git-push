@@ -13,6 +13,7 @@ import {
   type JsonObject,
 } from "./loadConfig.js";
 import { DEFAULT_CONFIG } from "./schema.js";
+import { t } from "../../lang/index.js";
 
 const UNSAFE_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
 const REPO_FILE_MODE = 0o644;
@@ -47,7 +48,7 @@ async function assertValid(target: ConfigTarget, updated: JsonObject): Promise<v
 function parseSegments(dottedPath: string, sourcePath: string): string[] {
   const segments = dottedPath.split(".");
   if (segments.some((segment) => segment === "" || UNSAFE_SEGMENTS.has(segment))) {
-    throw new ConfigError(sourcePath, [`chemin invalide : ${dottedPath}`]);
+    throw new ConfigError(sourcePath, [t("config.issuePath", { path: dottedPath })]);
   }
   return segments;
 }

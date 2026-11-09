@@ -2,10 +2,11 @@ import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import { useEffect, useState, type ReactElement } from "react";
 import type { PromptRequest } from "./createCommandUi.js";
+import { t } from "../lang/index.js";
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const SPINNER_INTERVAL_MS = 80;
-const YES_KEYS = ["o", "O", "y", "Y"];
+const YES_KEYS = ["o", "O", "y", "Y", "j", "J"];
 
 export function PromptView({ request }: { request: PromptRequest }): ReactElement {
   if (request.kind === "ask") return <AskPrompt request={request} />;
@@ -25,7 +26,7 @@ function AskPrompt({ request }: { request: Extract<PromptRequest, { kind: "ask" 
         <Text color="cyan">{"> "}</Text>
         <TextInput value={value} onChange={setValue} onSubmit={request.resolve} />
       </Box>
-      <Text dimColor>Entrée pour valider, Échap pour annuler</Text>
+      <Text dimColor>{t("ui.askHint")}</Text>
     </Box>
   );
 }
@@ -37,7 +38,7 @@ function ConfirmPrompt({ request }: { request: Extract<PromptRequest, { kind: "c
   });
   return (
     <Text>
-      <Text bold>{request.question}</Text> <Text dimColor>(o/N)</Text>
+      <Text bold>{request.question}</Text> <Text dimColor>{t("ui.confirmHint")}</Text>
     </Text>
   );
 }

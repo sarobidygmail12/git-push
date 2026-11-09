@@ -1,6 +1,7 @@
 import { GitError } from "../../core/errors.js";
 import { getOperationInProgress, getStatus, isConflict, isConflictResolved } from "../../core/git/status.js";
 import type { CommandContext } from "../types.js";
+import { t } from "../../lang/index.js";
 
 export type SequenceOperation = "cherry-pick" | "rebase";
 
@@ -8,11 +9,13 @@ export type SequenceOutcome = "completed" | "aborted" | "paused";
 
 type ConflictAction = "continue" | "abort" | "skip";
 
-const CONFLICT_CHOICES = [
-  { label: "Continuer (conflits résolus)", value: "continue" },
-  { label: "Annuler tout (--abort)", value: "abort" },
-  { label: "Passer ce commit (--skip)", value: "skip" },
-] as const satisfies ReadonlyArray<{ label: string; value: ConflictAction }>;
+function conflictChoices(): ReadonlyArray<{ label: string; value: ConflictAction }> {
+  return [
+    { label: t("sequence.continue"), value: "continue" },
+    { label: t("sequence.abort"), value: "abort" },
+    { label: t("sequence.skip"), value: "skip" },
+  ];
+}
 
 export async function isSequenceRunning(ctx: CommandContext, operation: SequenceOperation): Promise<boolean> {
   return (await getOperationInProgress(ctx.git)) === operation;
@@ -32,17 +35,17 @@ export async function resolveSequence(ctx: CommandContext, operation: SequenceOp
   if (!(await isSequenceRunning(ctx, operation))) return "completed";
 
   const conflicts = await listConflicts(ctx);
-  const details = conflicts.length > 0 ? formatPaths(conflicts) : "  (aucun : le commit est peut-être vide)";
-  ctx.ui.log(`${operation} interrompu, fichiers en conflit :\n${details}`, "warn");
+  const details = conflicts.length > 0 ? formatPaths(conflicts) : t("sequence.noConflictFiles");
+  ctx.ui.log(t("sequence.interrupted", { operation, files: details }), "warn");
 
-  const action = await ctx.ui.select("Que faire ?", CONFLICT_CHOICES);
+  const action = await ctx.ui.select(t("sequence.whatToDo"), conflictChoices());
   if (!action) {
-    ctx.ui.log(`${operation} toujours en cours. Relance /status pour voir l'état.`, "warn");
+    ctx.ui.log(t("sequence.stillRunning", { operation }), "warn");
     return "paused";
   }
   if (action === "abort") {
     await ctx.git.run([operation, "--abort"]);
-    ctx.ui.log(`${operation} annulé.`, "success");
+    ctx.ui.log(t("sequence.aborted", { operation }), "success");
     return "aborted";
   }
   if (action === "continue") await continueSequence(ctx, operation, conflicts);
@@ -62,7 +65,7 @@ async function continueSequence(
 ): Promise<void> {
   const unresolved = await findUnresolved(ctx, conflicts);
   if (unresolved.length > 0) {
-    ctx.ui.log(`Conflits encore présents dans :\n${formatPaths(unresolved)}`, "error");
+    ctx.ui.log(t("sequence.stillConflicts", { files: formatPaths(unresolved) }), "error");
     return;
   }
   if (conflicts.length > 0) await ctx.git.run(["add", "--", ...conflicts]);

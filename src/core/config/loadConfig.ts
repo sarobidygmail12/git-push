@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { ConfigError } from "../errors.js";
 import { configSchema, DEFAULT_CONFIG, type Config } from "./schema.js";
+import { t } from "../../lang/index.js";
 
 export type JsonObject = { [key: string]: unknown };
 
@@ -43,7 +44,7 @@ export async function readJsonObject(path: string): Promise<JsonObject | undefin
   const text = await readFile(path, "utf8").catch(undefinedIfMissing);
   if (text === undefined) return undefined;
   const parsed = parseJson(text, path);
-  if (!isJsonObject(parsed)) throw new ConfigError(path, ["le fichier doit contenir un objet JSON"]);
+  if (!isJsonObject(parsed)) throw new ConfigError(path, [t("config.issueNotObject")]);
   return parsed;
 }
 
@@ -69,7 +70,7 @@ export function assertRepoOverrideAllowed(repoFile: JsonObject, repoPath: string
   if (forbidden.length > 0) {
     throw new ConfigError(
       repoPath,
-      forbidden.map((key) => `${key} : réglable uniquement dans la configuration globale`),
+      forbidden.map((key) => t("config.issueGlobalOnly", { key })),
     );
   }
 }
@@ -113,7 +114,7 @@ function parseJson(text: string, path: string): unknown {
     const parsed: unknown = JSON.parse(text);
     return parsed;
   } catch (error) {
-    throw new ConfigError(path, [`JSON invalide : ${error instanceof Error ? error.message : String(error)}`]);
+    throw new ConfigError(path, [t("config.issueJson", { detail: error instanceof Error ? error.message : String(error) })]);
   }
 }
 

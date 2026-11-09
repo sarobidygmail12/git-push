@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{web.htmlLang}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🚀 gitpilot · graphe</title>
+<title>🚀 gitpilot · {{web.graphTitle}}</title>
 <style>
 :root { color-scheme:light; --bg:#f3f4f6; --panel:#fff; --raised:#e9ebef; --text:#1d2129; --muted:#667085; --line:#dfe2e8; --accent:#1570ef; --hover:#eceef2; --selected:#d9e7fd; --head:#fff4d6; --add:#12845a; --del:#d0342c; --on-avatar:#fff; }
 :root[data-theme="dark"] { color-scheme:dark; --bg:#16181d; --panel:#1e2128; --raised:#2a2e37; --text:#e6e8ec; --muted:#8f97a6; --line:#2e323c; --accent:#5ba4f7; --hover:#262a33; --selected:#23364f; --head:#332c17; --add:#45c98f; --del:#f2726a; --on-avatar:#fff; }
@@ -112,28 +112,28 @@ h3 { font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(-
 </head>
 <body>
 <header class="topbar">
-  <button id="menu" class="toolbar-button" type="button" aria-label="Afficher les branches">☰</button>
+  <button id="menu" class="toolbar-button" type="button" aria-label="{{web.showBranches}}">☰</button>
   <span id="repo" class="repo">gitpilot</span>
-  <button id="current" class="current" type="button" title="Aller au commit HEAD" hidden></button>
-  <span id="filter-chip" class="chip" hidden><span id="filter-text"></span><button id="filter-clear" type="button" aria-label="Retirer le filtre">×</button></span>
+  <button id="current" class="current" type="button" title="{{web.goToHead}}" hidden></button>
+  <span id="filter-chip" class="chip" hidden><span id="filter-text"></span><button id="filter-clear" type="button" aria-label="{{web.removeFilter}}">×</button></span>
   <form id="filters" role="search">
-    <input id="search" type="search" placeholder="Rechercher un commit…" aria-label="Recherche">
-    <select id="field" aria-label="Champ recherché">
-      <option value="message">Message</option><option value="author">Auteur</option><option value="hash">Hash</option>
+    <input id="search" type="search" placeholder="{{web.searchPlaceholder}}" aria-label="{{web.searchLabel}}">
+    <select id="field" aria-label="{{web.searchField}}">
+      <option value="message">{{web.message}}</option><option value="author">{{web.author}}</option><option value="hash">Hash</option>
     </select>
   </form>
-  <a class="toolbar-button" href="/help">Aide</a>
-  <button id="theme" class="toolbar-button" type="button">Thème</button>
+  <a class="toolbar-button" href="/help">{{web.help}}</a>
+  <button id="theme" class="toolbar-button" type="button">{{web.theme}}</button>
 </header>
 <div class="layout">
-  <nav id="sidebar" aria-label="Branches et auteurs"></nav>
+  <nav id="sidebar" aria-label="{{web.branchesAndAuthors}}"></nav>
   <main class="center" id="center">
-    <div class="columns"><span>Branche / tag</span><span id="graph-title">Graphe</span><span>Message</span><span>Auteur</span><span>Date</span><span>SHA</span></div>
+    <div class="columns"><span>{{web.branchTag}}</span><span id="graph-title">{{web.graph}}</span><span>{{web.message}}</span><span>{{web.author}}</span><span>{{web.date}}</span><span>SHA</span></div>
     <div id="rows"></div>
     <div id="state" hidden></div>
-    <button id="more" class="toolbar-button" type="button" hidden>Charger 100 commits de plus</button>
+    <button id="more" class="toolbar-button" type="button" hidden>{{web.loadMore}}</button>
   </main>
-  <aside id="details" aria-label="Détail du commit" hidden></aside>
+  <aside id="details" aria-label="{{web.commitDetails}}" hidden></aside>
 </div>
 <div id="refs-popover" class="refs-popover" role="tooltip" hidden></div>
 <script>
@@ -328,7 +328,7 @@ function refsCell(commit, color) {
 }
 
 function formatDate(iso) {
-  return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleString("{{web.dateLocale}}", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function commitRow(commit, cell, lanes, dimOtherBranches) {
@@ -365,7 +365,7 @@ function render() {
   const cells = isSearching ? [] : computeGraph(loaded);
   const lanes = Math.max(1, ...cells.map((cell) => cell.width));
   document.documentElement.style.setProperty("--graph-width", (isSearching ? MIN_GRAPH_WIDTH : graphPixelWidth(lanes)) + "px");
-  byId("graph-title").textContent = isSearching ? "" : "Graphe";
+  byId("graph-title").textContent = isSearching ? "" : "{{web.graph}}";
   const dim = !isSearching && selectedBranch === "" && loaded.some((commit) => commit.onCurrentBranch);
   rowsNode.replaceChildren(...loaded.map((commit, index) => commitRow(commit, cells[index], lanes, dim)));
 }
@@ -416,20 +416,20 @@ function authorItem(author) {
 }
 
 function renderSidebar() {
-  const local = section("Local", repo.local.length, true);
+  const local = section("{{web.local}}", repo.local.length, true);
   repo.local.forEach((branch) => local.append(branchItem(branch.name, branch.name, aheadBehind(branch))));
 
-  const remote = section("Distant", repo.remote.length, true);
+  const remote = section("{{web.remote}}", repo.remote.length, true);
   const remotes = Map.groupBy(repo.remote, (name) => name.split("/")[0]);
   remotes.forEach((names, remoteName) => {
     remote.append(element("div", remoteName, "group-label"));
     names.forEach((name) => remote.append(branchItem(name, name.slice(remoteName.length + 1))));
   });
 
-  const authors = section("Auteurs", repo.authors.length, true);
+  const authors = section("{{web.authors}}", repo.authors.length, true);
   repo.authors.forEach((author) => authors.append(authorItem(author)));
 
-  const tags = section("Tags", repo.tags.length, false);
+  const tags = section("{{web.tags}}", repo.tags.length, false);
   repo.tags.forEach((tag) => {
     const item = element("div", undefined, "item static");
     item.append(element("span", tag, "label"));
@@ -469,8 +469,8 @@ function renderCurrentBranch() {
   const node = byId("current");
   const local = repo.local.find((branch) => branch.name === repo.head.branch);
   const counts = local ? aheadBehind(local) : "";
-  const label = repo.head.branch ?? (repo.head.hash ? "HEAD détaché · " + repo.head.hash.slice(0, 7) : "aucun commit");
-  node.replaceChildren(element("small", "Vous êtes sur"), element("span", label, "name"));
+  const label = repo.head.branch ?? (repo.head.hash ? "{{web.detachedHead}} · " + repo.head.hash.slice(0, 7) : "{{web.noCommit}}");
+  node.replaceChildren(element("small", "{{web.youAreOn}}"), element("span", label, "name"));
   if (counts) node.append(element("small", counts));
   node.hidden = false;
 }
@@ -494,9 +494,9 @@ function copyButton(label, text) {
   button.onclick = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      button.textContent = "Copié";
+      button.textContent = "{{web.copied}}";
     } catch {
-      button.textContent = "Échec";
+      button.textContent = "{{web.failed}}";
     }
     setTimeout(() => { button.textContent = label; }, 1200);
   };
@@ -544,7 +544,7 @@ async function renderDetails(commit) {
   const close = element("button", "×");
   close.id = "close";
   close.type = "button";
-  close.setAttribute("aria-label", "Fermer le détail");
+  close.setAttribute("aria-label", "{{web.closeDetails}}");
   close.onclick = closeDetails;
   head.append(element("h2", commit.subject), close);
 
@@ -554,16 +554,16 @@ async function renderDetails(commit) {
   person.append(avatar(commit.author), who);
 
   const actions = element("div", undefined, "actions");
-  actions.append(copyButton("Copier le hash", commit.hash), copyButton("Copier /cherry-pick", "/cherry-pick " + commit.hash));
+  actions.append(copyButton("{{web.copyHash}}", commit.hash), copyButton("{{web.copyCherryPick}}", "/cherry-pick " + commit.hash));
 
   const parents = element("div", undefined, "wrap");
   commit.parents.forEach((hash) => parents.append(parentLink(hash)));
 
   const body = element("div");
-  detailsNode.replaceChildren(head, body, person, element("h3", "Branche"), element("div", commit.branch || "inconnue"), element("h3", "SHA"), element("div", commit.hash, "mono date"));
-  if (commit.parents.length > 0) detailsNode.append(element("h3", commit.parents.length > 1 ? "Parents (fusion)" : "Parent"), parents);
+  detailsNode.replaceChildren(head, body, person, element("h3", "{{web.branch}}"), element("div", commit.branch || "{{web.unknown}}"), element("h3", "SHA"), element("div", commit.hash, "mono date"));
+  if (commit.parents.length > 0) detailsNode.append(element("h3", commit.parents.length > 1 ? "{{web.parentsMerge}}" : "{{web.parent}}"), parents);
   detailsNode.append(actions);
-  const loadingNote = element("p", "Chargement…", "date");
+  const loadingNote = element("p", "{{web.loading}}", "date");
   detailsNode.append(loadingNote);
 
   try {
@@ -573,7 +573,7 @@ async function renderDetails(commit) {
     if (!response.ok) throw new Error(data.error);
     loadingNote.remove();
     if (data.body !== "") body.append(element("p", data.body, "body"));
-    if (data.committer !== commit.author) who.append(element("small", "Commité par " + data.committer));
+    if (data.committer !== commit.author) who.append(element("small", "{{web.committedBy}} " + data.committer));
     detailsNode.append(containedInSection(data.containedIn), ...filesSection(data));
   } catch (error) {
     if (token === detailToken) loadingNote.textContent = "Erreur : " + error.message;
@@ -587,7 +587,7 @@ function containedInSection(refs) {
     const isCurrent = ref.kind === "branch" && ref.name === repo?.head.branch;
     list.append(element("span", ref.name, "badge" + (isCurrent ? " is-current" : "")));
   });
-  container.append(element("h3", "Présent dans " + refs.length + " branche" + (refs.length > 1 ? "s" : "")), list);
+  container.append(element("h3", "{{web.containedIn}} " + refs.length), list);
   return container;
 }
 
@@ -595,7 +595,7 @@ function filesSection(data) {
   const added = data.files.reduce((sum, file) => sum + (file.added ?? 0), 0);
   const deleted = data.files.reduce((sum, file) => sum + (file.deleted ?? 0), 0);
   const title = element("h3");
-  title.append(data.fileCount + " fichier" + (data.fileCount > 1 ? "s" : "") + " · ", element("span", "+" + added, "add"), " ", element("span", "−" + deleted, "del"));
+  title.append("{{web.files}} " + data.fileCount + " · ", element("span", "+" + added, "add"), " ", element("span", "−" + deleted, "del"));
   const nodes = [title, ...data.files.map(fileRow)];
   if (data.fileCount > data.files.length) nodes.push(element("p", "… et " + (data.fileCount - data.files.length) + " autres fichiers.", "date"));
   return nodes;
@@ -616,7 +616,7 @@ async function loadPage(page) {
     nextPage = page + 1;
     hasMore = data.hasMore;
     render();
-    showState(loaded.length === 0 ? "Aucun commit trouvé." : "");
+    showState(loaded.length === 0 ? "{{web.noCommitFound}}" : "");
     moreButton.hidden = !hasMore;
     return true;
   } catch (error) {

@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { Command, WebServer } from "../commands/types.js";
 import { redactApiKeys } from "../core/config/apiKeys.js";
 import { describeConfigOptions, type Config } from "../core/config/schema.js";
+import { t, translatePage } from "../lang/index.js";
 import { GitPilotError } from "../core/errors.js";
 import type { GitClient } from "../core/git/gitClient.js";
 import { getCommitDetails, getLogPage, getRepoOverview, type LogQuery, type LogSearchField } from "../core/git/log.js";
@@ -49,7 +50,7 @@ async function start(dependencies: WebServerDependencies): Promise<string> {
 
 /** Deux gitpilot ouverts sur deux dépôts doivent chacun servir le leur. */
 async function listenOnFirstFreePort(server: Server, port: number, attemptsLeft: number): Promise<number> {
-  if (attemptsLeft === 0) throw new GitPilotError(`Aucun port libre à partir de ${port - PORT_ATTEMPTS}.`);
+  if (attemptsLeft === 0) throw new GitPilotError(t("server.noPort", { port: port - PORT_ATTEMPTS }));
   try {
     await listen(server, port);
     return port;
@@ -96,8 +97,8 @@ async function handleRequest(routes: Map<string, Route>, request: IncomingMessag
 }
 
 async function resolveRequest(routes: Map<string, Route>, request: IncomingMessage): Promise<RouteResult> {
-  if (!isLocalHostHeader(request.headers.host)) return textResult(HTTP_FORBIDDEN, "Hôte refusé");
-  if (request.method !== "GET") return textResult(HTTP_METHOD_NOT_ALLOWED, "Méthode refusée");
+  if (!isLocalHostHeader(request.headers.host)) return textResult(HTTP_FORBIDDEN, t("server.hostRefused"));
+  if (request.method !== "GET") return textResult(HTTP_METHOD_NOT_ALLOWED, t("server.methodRefused"));
   const url = new URL(request.url ?? "/", "http://localhost");
   const route = routes.get(url.pathname);
   if (!route) return textResult(HTTP_NOT_FOUND, "Page introuvable");
@@ -114,7 +115,7 @@ function isLocalHostHeader(host: string | undefined): boolean {
 }
 
 async function servePage(fileName: string): Promise<RouteResult> {
-  const body = await readFile(new URL(`./pages/${fileName}`, import.meta.url), "utf8");
+  const body = translatePage(await readFile(new URL(`./pages/${fileName}`, import.meta.url), "utf8"));
   return { status: HTTP_OK, contentType: "text/html; charset=utf-8", body };
 }
 

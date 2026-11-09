@@ -1,6 +1,7 @@
 import { execa, type Result } from "execa";
 import { z } from "zod";
 import { GitError } from "../errors.js";
+import { t } from "../../lang/index.js";
 
 const LOOKUP_TIMEOUT_MS = 10_000;
 const CREATE_TIMEOUT_MS = 30_000;
@@ -24,9 +25,9 @@ function runGh(cwd: string, args: readonly string[], timeout: number): Promise<R
 
 function toGhError(result: Result, args: readonly string[]): GitError {
   if (result.code === COMMAND_NOT_FOUND) {
-    return new GitError("GitHub CLI (gh) est introuvable : installe-le depuis https://cli.github.com.", { args });
+    return new GitError(t("pr.ghMissing"), { args });
   }
-  const output = String(result.stderr ?? "").trim() || result.message || `gh ${args.join(" ")} a échoué`;
+  const output = String(result.stderr ?? "").trim() || result.message || t("pr.ghFailed", { command: args.join(" ") });
   return new GitError(output, { args, stderr: output, ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }) });
 }
 

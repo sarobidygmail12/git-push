@@ -1,6 +1,7 @@
 import { GitError } from "../errors.js";
 import type { GitClient } from "./gitClient.js";
 import type { RepoStatus } from "./status.js";
+import { t } from "../../lang/index.js";
 
 export async function isHeadPushed(git: GitClient): Promise<boolean> {
   const { stdout } = await git.run(["branch", "-r", "--contains", "HEAD"]);
@@ -13,8 +14,8 @@ export async function countHeadParents(git: GitClient): Promise<number> {
 }
 
 export async function assertHeadNotPushed(git: GitClient, status: RepoStatus): Promise<void> {
-  if (!status.headHash) throw new GitError("Le dépôt n'a encore aucun commit.");
-  if (await isHeadPushed(git)) throw new GitError("Refusé : le dernier commit est déjà poussé.");
+  if (!status.headHash) throw new GitError(t("commits.none"));
+  if (await isHeadPushed(git)) throw new GitError(t("commits.alreadyPushed"));
 }
 
 export async function readHeadMessage(git: GitClient): Promise<string> {

@@ -1,5 +1,6 @@
 import { execa } from "execa";
 import { GitError } from "../errors.js";
+import { t } from "../../lang/index.js";
 
 export type GitResult = { stdout: string; stderr: string; exitCode: number };
 
@@ -53,18 +54,18 @@ type RawResult = { stdout: string; stderr: string; exitCode: number | undefined;
 
 function toGitResult(args: readonly string[], options: GitRunOptions, raw: RawResult): GitResult {
   if (raw.spawnError !== undefined || raw.exitCode === undefined) {
-    throw new GitError(`Impossible d'exécuter git : ${raw.spawnError ?? "processus interrompu"}`, { args });
+    throw new GitError(t("git.cannotRun", { reason: raw.spawnError ?? t("git.interrupted") }), { args });
   }
   if (raw.exitCode !== 0 && !options.allowFailure) {
     const output = raw.stderr || raw.stdout;
-    throw new GitError(output || `git ${args.join(" ")} a échoué`, { args, exitCode: raw.exitCode, stderr: output });
+    throw new GitError(output || t("git.failed", { command: args.join(" ") }), { args, exitCode: raw.exitCode, stderr: output });
   }
   return { stdout: raw.stdout, stderr: raw.stderr, exitCode: raw.exitCode };
 }
 
 function assertNotDestructive(args: readonly string[], options: GitRunOptions): void {
   if (options.destructiveConfirmed || !isDestructive(args)) return;
-  throw new GitError(`Commande destructive bloquée sans confirmation : git ${args.join(" ")}`, { args });
+  throw new GitError(t("git.destructiveBlocked", { command: args.join(" ") }), { args });
 }
 
 export function isDestructive(args: readonly string[]): boolean {

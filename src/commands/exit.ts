@@ -1,9 +1,12 @@
 import type { Command } from "./types.js";
+import { t } from "../lang/index.js";
 
 export const exitCommand: Command = {
   name: "exit",
   aliases: ["quit"],
-  description: "Quitte gitpilot",
+  get description() {
+    return t("cmd.exit");
+  },
   usage: "/exit",
   examples: ["/exit"],
   gitSteps: [],

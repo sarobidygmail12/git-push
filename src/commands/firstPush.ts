@@ -5,42 +5,47 @@ import { isSequenceRunning, resolveSequence, startRebase } from "./shared/resolv
 import { reportPullRequest } from "./shared/reportPullRequest.js";
 import { secureWorkingTree } from "./shared/secureWorkingTree.js";
 import type { Command, CommandContext } from "./types.js";
+import { t } from "../lang/index.js";
 
 const REMOTE = "origin";
 
 export const firstPushCommand: Command = {
   name: "first-push",
   aliases: ["fp"],
-  description: "Publie la branche pour la première fois, même si le dépôt distant contient déjà un commit",
+  get description() {
+    return t("cmd.firstPush");
+  },
   usage: "/first-push",
   examples: ["/first-push"],
-  gitSteps: [
+  get gitSteps() {
+    return [
     "git fetch origin",
-    "si le remote a des commits absents en local : flux de /commit ou git stash push -u si le working tree est modifié",
-    "git rebase origin/<branche>",
-    "en cas de conflit : git rebase --continue | --abort | --skip",
-    "git push -u origin <branche>",
-  ],
+    t("step.firstPushDirty"),
+    "git rebase origin/<branch>",
+    t("step.conflictRebase"),
+    "git push -u origin <branch>",
+  ];
+  },
   run: async (ctx) => {
     if (await isSequenceRunning(ctx, "rebase")) return finishRebaseThenPublish(ctx);
     await assertNoOperationInProgress(ctx.git);
     await assertHasOrigin(ctx);
 
     const status = await getStatus(ctx.git);
-    if (!status.branch) throw new GitError("HEAD détaché : bascule d'abord sur une branche.");
-    if (!status.headHash) throw new GitError("Aucun commit à publier : lance d'abord /commit.");
+    if (!status.branch) throw new GitError(t("head.switchFirst"));
+    if (!status.headHash) throw new GitError(t("firstPush.noCommit"));
     if (status.upstream) {
-      ctx.ui.log(`${status.branch} est déjà reliée à ${status.upstream} : utilise /push.`, "warn");
+      ctx.ui.log(t("firstPush.alreadyLinked", { branch: status.branch, upstream: status.upstream }), "warn");
       return;
     }
 
-    await ctx.ui.spinner(`Récupération de ${REMOTE}…`, () => ctx.git.run(["fetch", REMOTE]));
+    await ctx.ui.spinner(t("spinner.fetchRemote", { remote: REMOTE }), () => ctx.git.run(["fetch", REMOTE]));
     const missingCommits = await countMissingRemoteCommits(ctx, status.branch);
     if (missingCommits === 0) return publish(ctx);
 
-    ctx.ui.log(`${REMOTE}/${status.branch} contient ${missingCommits} commit(s) absent(s) en local : je les intègre.`);
+    ctx.ui.log(t("firstPush.missingCommits", { remote: `${REMOTE}/${status.branch}`, count: missingCommits }));
     if (!(await secureWorkingTree(withoutAutoPush(ctx), "/first-push"))) {
-      ctx.ui.log("Publication annulée, rien n'a été poussé.", "warn");
+      ctx.ui.log(t("firstPush.cancelled"), "warn");
       return;
     }
     await startRebase(ctx, `${REMOTE}/${status.branch}`);
@@ -50,7 +55,7 @@ export const firstPushCommand: Command = {
 
 async function assertHasOrigin(ctx: CommandContext): Promise<void> {
   const { exitCode } = await ctx.git.run(["remote", "get-url", REMOTE], { allowFailure: true });
-  if (exitCode !== 0) throw new GitError(`Aucun dépôt distant « ${REMOTE} » : ajoute-le avec /init.`);
+  if (exitCode !== 0) throw new GitError(t("firstPush.noRemote", { remote: REMOTE }));
 }
 
 /** Tant que le remote n'est pas intégré, le push automatique de /commit serait rejeté. */
@@ -69,12 +74,12 @@ async function countMissingRemoteCommits(ctx: CommandContext, branch: string): P
 async function finishRebaseThenPublish(ctx: CommandContext): Promise<void> {
   const outcome = await resolveSequence(ctx, "rebase");
   if (outcome === "completed") return publish(ctx);
-  ctx.ui.log(outcome === "paused" ? "Rien n'a été poussé. Relance /first-push pour reprendre." : "Rien n'a été poussé.", "warn");
+  ctx.ui.log(t(outcome === "paused" ? "firstPush.pausedNothing" : "firstPush.nothing"), "warn");
 }
 
 async function publish(ctx: CommandContext): Promise<void> {
   const status = await getStatus(ctx.git);
-  await ctx.ui.spinner("Push…", () => pushCurrentBranch(ctx.git, status));
-  ctx.ui.log(`${status.branch ?? "La branche"} est publiée. Les prochains envois passeront par /push.`, "success");
+  await ctx.ui.spinner(t("spinner.push"), () => pushCurrentBranch(ctx.git, status));
+  ctx.ui.log(t("firstPush.published", { branch: status.branch ?? t("firstPush.theBranch") }), "success");
   await reportPullRequest(ctx);
 }

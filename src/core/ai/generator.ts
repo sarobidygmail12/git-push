@@ -1,4 +1,5 @@
 import type { Config } from "../config/schema.js";
+import { t } from "../../lang/index.js";
 import { ProviderError } from "../errors.js";
 import { fallbackProvider } from "./fallback.js";
 import { createGeminiProvider } from "./gemini.js";
@@ -48,7 +49,7 @@ async function tryProviders(
   failures: readonly ProviderError[],
 ): Promise<GeneratedMessage> {
   const [provider, ...remaining] = providers;
-  if (!provider) throw failures.at(-1) ?? new ProviderError("fallback", "unavailable", "aucun provider configuré");
+  if (!provider) throw failures.at(-1) ?? new ProviderError("fallback", "unavailable", t("ai.noProvider"));
   try {
     const message = await generateCleanMessage(provider, input, timeoutMs);
     return { message, provider: provider.name, failures };

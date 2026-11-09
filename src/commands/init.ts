@@ -4,23 +4,26 @@ import { dirname, join, resolve } from "node:path";
 import { GitError } from "../core/errors.js";
 import type { GitClient } from "../core/git/gitClient.js";
 import type { Command, CommandContext } from "./types.js";
+import { t } from "../lang/index.js";
 
 const REMOTE_NAME = "origin";
 const HOME_PREFIX = "~/";
 
 export const initCommand: Command = {
   name: "init",
-  description: "Initialise un dépôt Git dans le dossier choisi et le relie à un dépôt distant",
+  get description() {
+    return t("cmd.init");
+  },
   usage: "/init",
   examples: ["/init"],
-  gitSteps: ["git -C <dossier> init -b <branches.main>", "git -C <dossier> remote add origin <url>"],
+  gitSteps: ["git -C <folder> init -b <branches.main>", "git -C <folder> remote add origin <url>"],
   run: async (ctx) => {
     const directory = await askDirectory(ctx);
     if (directory === undefined) return;
 
     const existingRoot = await findRepoRoot(ctx.git, directory);
     if (existingRoot) {
-      ctx.ui.log(`Déjà un dépôt Git : ${existingRoot}`, "warn");
+      ctx.ui.log(t("init.existing", { root: existingRoot }), "warn");
       if (await hasOrigin(ctx.git, existingRoot)) return;
     }
 
@@ -29,21 +32,21 @@ export const initCommand: Command = {
 
     if (!existingRoot) {
       await ctx.git.run(["init", "-b", ctx.config.branches.main, directory]);
-      ctx.ui.log(`Dépôt initialisé dans ${directory} sur la branche ${ctx.config.branches.main}.`, "success");
+      ctx.ui.log(t("init.done", { directory, branch: ctx.config.branches.main }), "success");
     }
     const root = existingRoot ?? directory;
     if (remoteUrl !== "") {
       await ctx.git.run(["-C", root, "remote", "add", REMOTE_NAME, remoteUrl]);
-      ctx.ui.log(`Dépôt distant ${REMOTE_NAME} : ${remoteUrl}`, "success");
+      ctx.ui.log(t("init.remote", { name: REMOTE_NAME, url: remoteUrl }), "success");
     }
     if (directory !== resolve(ctx.git.cwd)) {
-      ctx.ui.log(`Cette session reste sur ${ctx.git.cwd} : relance gitpilot depuis ${root} pour y travailler.`);
+      ctx.ui.log(t("init.sessionStays", { cwd: ctx.git.cwd, root }));
     }
   },
 };
 
 async function askDirectory(ctx: CommandContext): Promise<string | undefined> {
-  const answer = (await ctx.ui.ask("Dossier du dépôt", { initial: ctx.git.cwd }))?.trim();
+  const answer = (await ctx.ui.ask(t("init.folderPrompt"), { initial: ctx.git.cwd }))?.trim();
   if (answer === undefined) return undefined;
   return resolve(ctx.git.cwd, expandHome(answer));
 }
@@ -55,10 +58,10 @@ function expandHome(path: string): string {
 }
 
 async function askRemoteUrl(ctx: CommandContext): Promise<string | undefined> {
-  const url = (await ctx.ui.ask("URL du dépôt distant (vide pour ignorer)"))?.trim();
+  const url = (await ctx.ui.ask(t("init.urlPrompt")))?.trim();
   if (url === undefined) return undefined;
   const hasWhitespace = [...url].some((character) => character.trim() === "");
-  if (url.startsWith("-") || hasWhitespace) throw new GitError(`URL de dépôt invalide : ${url}`);
+  if (url.startsWith("-") || hasWhitespace) throw new GitError(t("init.invalidUrl", { url }));
   return url;
 }
 

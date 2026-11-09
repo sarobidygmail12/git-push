@@ -3,6 +3,7 @@ import TextInput from "ink-text-input";
 import { useEffect, useState, type ReactElement } from "react";
 import { NO_SUGGESTIONS, type Suggestion, type SuggestionList } from "../commands/suggest.js";
 import { CommandSuggestions } from "./CommandSuggestions.js";
+import { t } from "../lang/index.js";
 
 type Props = {
   history: readonly string[];
@@ -105,7 +106,7 @@ export function PromptInput({ history, suggest, onSubmit }: Props): ReactElement
           value={value}
           onChange={handleChange}
           onSubmit={handleSubmit}
-          placeholder="Tape / pour voir les commandes"
+          placeholder={t("ui.inputPlaceholder")}
         />
       </Box>
       {isOpen ? <CommandSuggestions items={suggestions.items} selected={selected} /> : null}
