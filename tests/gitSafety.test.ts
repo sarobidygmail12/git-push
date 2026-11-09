@@ -143,7 +143,7 @@ describe("flux sur un vrai dépôt", () => {
     repo.git("switch", "--quiet", "-c", "feature/b");
     repo.write("file.txt", "modifié\n");
     const ctx = createFakeContext(repo.work, { select: "cancel" });
-    await startBranchFlow(ctx, { base: "develop", prefix: "hotfix/", name: "x" });
+    await startBranchFlow(ctx, { baseKey: "develop", prefix: "hotfix/", name: "x" });
     expect(repo.git("branch", "--show-current")).toBe("feature/b");
     expect(repo.git("branch", "--list", "hotfix/x")).toBe("");
   });
@@ -153,7 +153,7 @@ describe("flux sur un vrai dépôt", () => {
     const before = head();
     repo.write("file.txt", "modifié\n");
     const ctx = createFakeContext(repo.work, { select: "accept" });
-    await expect(startBranchFlow(ctx, { base: "develop", prefix: "hotfix/", name: "bad..name" })).rejects.toThrow("invalide");
+    await expect(startBranchFlow(ctx, { baseKey: "develop", prefix: "hotfix/", name: "bad..name" })).rejects.toThrow("invalide");
     expect(head()).toBe(before);
   });
 

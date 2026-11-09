@@ -8,5 +8,5 @@ export const fixCommand: Command = {
   examples: ["/fix", "/fix date-facture"],
   gitSteps: ["flux de /commit si le working tree est modifié", "git switch <preprod>", "git pull --ff-only", "git switch -c <prefixes.fix><nom>"],
   run: (ctx, [name]) =>
-    startBranchFlow(ctx, { base: ctx.config.branches.preprod, prefix: ctx.config.prefixes.fix, name }),
+    startBranchFlow(ctx, { baseKey: "preprod", prefix: ctx.config.prefixes.fix, name }),
 };

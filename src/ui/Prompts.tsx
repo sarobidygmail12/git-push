@@ -43,7 +43,7 @@ function ConfirmPrompt({ request }: { request: Extract<PromptRequest, { kind: "c
 }
 
 function SelectPrompt({ request }: { request: Extract<PromptRequest, { kind: "select" }> }): ReactElement {
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState(request.initialIndex);
   const count = request.labels.length;
   useInput((_input, key) => {
     if (key.upArrow) setSelected((index) => (index - 1 + count) % count);

@@ -10,7 +10,7 @@ export interface CommandUi {
   log(message: string, level?: LogLevel): void;
   ask(question: string, options?: { initial?: string }): Promise<string | undefined>;
   confirm(question: string): Promise<boolean>;
-  select<T>(question: string, choices: readonly SelectChoice<T>[]): Promise<T | undefined>;
+  select<T>(question: string, choices: readonly SelectChoice<T>[], options?: { initial?: T }): Promise<T | undefined>;
   spinner<T>(label: string, task: () => Promise<T>): Promise<T>;
   clear(): void;
   /** Rend le terminal à un programme externe, comme `$EDITOR`. */

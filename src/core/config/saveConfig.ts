@@ -27,6 +27,10 @@ export async function setConfigValue(target: ConfigTarget, dottedPath: string, r
   await writeAtomically(target.path, updated);
 }
 
+export function getValueAt(root: unknown, dottedPath: string): unknown {
+  return dottedPath.split(".").reduce<unknown>((node, segment) => (isJsonObject(node) ? node[segment] : undefined), root);
+}
+
 async function assertValid(target: ConfigTarget, updated: JsonObject): Promise<void> {
   const defaults = toJsonObject(DEFAULT_CONFIG);
   if (target.scope === "global") {

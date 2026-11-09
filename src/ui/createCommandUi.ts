@@ -5,7 +5,7 @@ export type DisplayLevel = LogLevel | "git";
 export type PromptRequest =
   | { kind: "ask"; question: string; initial: string; resolve: (answer: string | undefined) => void }
   | { kind: "confirm"; question: string; resolve: (answer: boolean) => void }
-  | { kind: "select"; question: string; labels: readonly string[]; resolve: (index: number | undefined) => void };
+  | { kind: "select"; question: string; labels: readonly string[]; initialIndex: number; resolve: (index: number | undefined) => void };
 
 export interface UiBridge {
   appendLog(text: string, level: DisplayLevel): void;
@@ -31,12 +31,13 @@ export function createCommandUi(bridge: UiBridge): CommandUi {
       new Promise((resolve) => {
         bridge.showPrompt({ kind: "confirm", question, resolve: closingPrompt(resolve) });
       }),
-    select: (question, choices) =>
+    select: (question, choices, options) =>
       new Promise((resolve) => {
         bridge.showPrompt({
           kind: "select",
           question,
           labels: choices.map((choice) => choice.label),
+          initialIndex: Math.max(0, choices.findIndex((choice) => choice.value === options?.initial)),
           resolve: closingPrompt((index: number | undefined) => {
             resolve(index === undefined ? undefined : choices[index]?.value);
           }),

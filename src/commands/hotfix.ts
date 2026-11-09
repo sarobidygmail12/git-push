@@ -8,5 +8,5 @@ export const hotfixCommand: Command = {
   examples: ["/hotfix", "/hotfix panier-vide"],
   gitSteps: ["flux de /commit si le working tree est modifié", "git switch <develop>", "git pull --ff-only", "si develop a divergé : git branch backup/<develop>-<hash> puis git reset --hard <upstream>", "git switch -c <prefixes.hotfix><nom>"],
   run: (ctx, [name]) =>
-    startBranchFlow(ctx, { base: ctx.config.branches.develop, prefix: ctx.config.prefixes.hotfix, name, forceDivergedBase: true }),
+    startBranchFlow(ctx, { baseKey: "develop", prefix: ctx.config.prefixes.hotfix, name, forceDivergedBase: true }),
 };

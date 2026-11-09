@@ -228,11 +228,14 @@ Le fichier global `~/.gitpilot/config.json` est créé au premier lancement. Un 
 Pour qu'un dépôt cloné ne puisse pas détourner tes diffs, `apiKeyEnv` et `baseUrl` ne sont acceptés que dans le fichier global.
 
 ```text
-/config                                 affiche la configuration effective
+/config                                 liste les options : Entrée modifie celle sélectionnée
+/config show                            affiche la configuration effective en JSON
 /config set commit.autoPush false       modifie le fichier global
 /config set --repo branches.develop dev modifie .gitpilot.json
 /config edit                            ouvre le fichier dans $VISUAL ou $EDITOR
 ```
+
+`/fix` part de `branches.preprod` et `/hotfix` de `branches.develop`. Si cette branche n'existe pas localement, gitpilot demande laquelle utiliser et enregistre ta réponse dans `.gitpilot.json`, qui reste hors de Git grâce à `.git/info/exclude`.
 
 La page `/help` documente chaque option.
 
