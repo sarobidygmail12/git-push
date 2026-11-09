@@ -236,6 +236,7 @@ You don't need this part to get started. Click a title to open it.
 | `/log` | | Commit graph in the browser: author and branch of each commit, current branch, file details |
 | `/switch <branch>` | `/sw` | Changes branch, with autocomplete |
 | `/branch <name>` | | Creates a branch and moves to it |
+| `/delete-branch <branch>` | `/db` | Deletes a branch locally, on the remote or both, with plain `git` (no `gh` needed) |
 | `/hotfix [name]` | | Commits current work, creates `hotfix/<name>` from develop |
 | `/fix [name]` | | Commits current work, creates `fix/<name>` from preprod |
 | `/cherry-pick <hash...>` | `/cp` | Applies commits, with guided conflict resolution |
@@ -297,7 +298,8 @@ Default models change quickly. If a provider answers `HTTP 404`, change its mode
 <details>
 <summary>🛟 All the safety checks</summary>
 
-- The Git client blocks `push --force`, `reset --hard` and `clean` unless a call has explicitly confirmed.
+- The Git client blocks `push --force`, `push --delete`, `branch -D`, `reset --hard` and `clean` unless a call has explicitly confirmed.
+- `/delete-branch` refuses the current branch and protected branches, and says before confirming how many commits would be lost.
 - `main` and `preprod` are protected by default: git-push asks for confirmation before committing to them.
 - `/switch` won't change branch with work in progress without offering to commit it or set it aside.
 - `/hotfix` and `/fix` check the name and the base before committing anything.

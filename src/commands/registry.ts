@@ -4,6 +4,7 @@ import { cherryPickCommand } from "./cherryPick.js";
 import { clearCommand } from "./clear.js";
 import { commitCommand } from "./commit.js";
 import { configCommand } from "./config.js";
+import { deleteBranchCommand } from "./deleteBranch.js";
 import { langCommand } from "./lang.js";
 import { diffCommand } from "./diff.js";
 import { exitCommand } from "./exit.js";
@@ -34,6 +35,7 @@ export const commands: readonly Command[] = [
   logCommand,
   switchCommand,
   branchCommand,
+  deleteBranchCommand,
   hotfixCommand,
   fixCommand,
   cherryPickCommand,

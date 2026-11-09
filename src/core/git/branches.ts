@@ -7,6 +7,7 @@ export const REMOTE_PREFIX = "refs/remotes/";
 export const LOCAL_PREFIX = "refs/heads/";
 const BACKUP_PREFIX = "backup/";
 const BACKUP_HASH_LENGTH = 7;
+const LS_REMOTE_NOT_FOUND = 2;
 
 export async function isValidBranchName(git: GitClient, name: string): Promise<boolean> {
   const { exitCode } = await git.run(["check-ref-format", "--branch", name], { allowFailure: true });
@@ -43,6 +44,47 @@ function toSwitchableName(ref: string): string {
 export async function hasRemote(git: GitClient): Promise<boolean> {
   const { stdout } = await git.run(["remote"]);
   return stdout.trim() !== "";
+}
+
+export type BranchLocations = { local: boolean; remotes: readonly string[] };
+
+export async function locateBranch(git: GitClient, name: string): Promise<BranchLocations> {
+  const refs = await listRefs(git);
+  return {
+    local: refs.includes(`${LOCAL_PREFIX}${name}`),
+    remotes: refs.filter((ref) => ref.startsWith(REMOTE_PREFIX) && toSwitchableName(ref) === name).map(remoteNameOf),
+  };
+}
+
+function remoteNameOf(ref: string): string {
+  const path = ref.slice(REMOTE_PREFIX.length);
+  return path.slice(0, path.indexOf("/"));
+}
+
+/** Commits que seules les références supprimées atteignent : ni HEAD ni aucune autre branche ne les garde. */
+export async function countCommitsLostByDeleting(git: GitClient, name: string, target: BranchLocations): Promise<number> {
+  const deleted = [
+    ...(target.local ? [`${LOCAL_PREFIX}${name}`] : []),
+    ...target.remotes.map((remote) => `${REMOTE_PREFIX}${remote}/${name}`),
+  ];
+  const kept = (await listRefs(git)).filter((ref) => !deleted.includes(ref));
+  const { stdout } = await git.run(["rev-list", "--count", ...deleted, "--not", "HEAD", ...kept]);
+  return Number(stdout.trim());
+}
+
+/** `-D` et non `-d` : `-d` compare à l'upstream, et l'appelant a déjà fait confirmer les commits perdus. */
+export async function deleteLocalBranch(git: GitClient, name: string): Promise<void> {
+  await git.run(["branch", "-D", name], { destructiveConfirmed: true });
+}
+
+export async function deleteRemoteBranch(git: GitClient, remote: string, name: string): Promise<void> {
+  const ref = `${LOCAL_PREFIX}${name}`;
+  const { exitCode } = await git.run(["ls-remote", "--exit-code", remote, ref], { allowFailure: true });
+  if (exitCode === LS_REMOTE_NOT_FOUND) {
+    await git.run(["branch", "-d", "-r", `${remote}/${name}`]);
+    return;
+  }
+  await git.run(["push", remote, "--delete", ref], { destructiveConfirmed: true });
 }
 
 export async function pushCurrentBranch(git: GitClient, status: RepoStatus): Promise<void> {

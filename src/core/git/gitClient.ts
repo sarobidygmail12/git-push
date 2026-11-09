@@ -72,8 +72,12 @@ export function isDestructive(args: readonly string[]): boolean {
   const [subcommand, ...rest] = args;
   if (subcommand === "clean") return true;
   if (subcommand === "reset") return rest.includes("--hard");
+  if (subcommand === "branch") return rest.includes("-D");
   if (subcommand !== "push") return false;
-  return rest.some((arg) => arg === "-f" || arg.startsWith("--force") || arg.startsWith("+"));
+  return rest.some(
+    (arg) =>
+      arg === "-f" || arg === "-d" || arg === "--delete" || arg.startsWith("--force") || arg.startsWith("+") || arg.startsWith(":"),
+  );
 }
 
 function quoteForDisplay(arg: string): string {
