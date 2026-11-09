@@ -6,16 +6,18 @@ import { getValueAt, setConfigValue, type ConfigTarget } from "../core/config/sa
 import { DEFAULT_CONFIG, describeConfigOptions, type Config, type ConfigOptionDoc } from "../core/config/schema.js";
 import { ConfigError, GitPilotError } from "../core/errors.js";
 import type { Command, CommandContext } from "./types.js";
+import { t } from "../lang/index.js";
 
 const REPO_FLAG = "--repo";
 const DEFAULT_EDITOR = "vi";
 const SUBCOMMANDS = ["show", "set", "edit"];
-const BROWSE_QUESTION = "Configuration (↑↓ pour naviguer, Entrée pour modifier, Échap pour quitter)";
 
 export const configCommand: Command = {
   name: "config",
-  description: "Liste les options et permet de les modifier",
-  usage: "/config [show | set chemin valeur | edit] [--repo]",
+  get description() {
+    return t("cmd.config");
+  },
+  usage: "/config [show | set path value | edit] [--repo]",
   examples: ["/config", "/config --repo", "/config show", "/config set commit.autoPush false", "/config set --repo branches.develop dev", "/config edit"],
   gitSteps: [],
   allowsInvalidConfig: true,
@@ -28,10 +30,10 @@ export const configCommand: Command = {
     if (subcommand === "edit") return editConfig(ctx, useRepo);
     if (subcommand === "set" && path !== undefined && valueParts.length > 0) {
       await setConfigValue(resolveTarget(ctx, useRepo), path, restoreListQuotes(path, valueParts.join(" ")));
-      ctx.ui.log(`${path} mis à jour.`, "success");
+      ctx.ui.log(t("config.updated", { path }), "success");
       return;
     }
-    ctx.ui.log(`Usage : ${configCommand.usage}`, "warn");
+    ctx.ui.log(t("msg.usage", { usage: configCommand.usage }), "warn");
   },
 };
 
@@ -48,8 +50,8 @@ function showConfig(ctx: CommandContext): void {
 }
 
 function describeLocations(ctx: CommandContext): string {
-  const repoLine = ctx.paths.repo ? `\nDépôt  : ${ctx.paths.repo}` : "";
-  return `Global : ${ctx.paths.global}${repoLine}`;
+  const repoLine = ctx.paths.repo ? `\n${t("config.locationRepo", { path: ctx.paths.repo })}` : "";
+  return `${t("config.locationGlobal", { path: ctx.paths.global })}${repoLine}`;
 }
 
 async function browseConfig(ctx: CommandContext, useRepo: boolean): Promise<void> {
@@ -61,7 +63,7 @@ async function browseConfig(ctx: CommandContext, useRepo: boolean): Promise<void
 async function browseFrom(ctx: CommandContext, config: Config, useRepo: boolean, initial?: string): Promise<void> {
   const options = describeConfigOptions();
   const choices = options.map((option) => toChoice(option, redactApiKeys(config)));
-  const selectedPath = await ctx.ui.select(BROWSE_QUESTION, choices, initial === undefined ? undefined : { initial });
+  const selectedPath = await ctx.ui.select(t("config.browse"), choices, initial === undefined ? undefined : { initial });
   const selected = options.find((option) => option.path === selectedPath);
   if (!selected) return;
   await browseFrom(ctx, await editOption(ctx, config, selected, useRepo), useRepo, selected.path);
@@ -86,7 +88,7 @@ async function editOption(ctx: CommandContext, config: Config, option: ConfigOpt
     const target = await resolveEditTarget(ctx, option.path, useRepo);
     // Encodé en JSON pour une option texte : une branche nommée « 123 » serait sinon lue comme un nombre.
     await setConfigValue(target, option.path, typeof current === "string" ? JSON.stringify(answer) : answer);
-    ctx.ui.log(`${option.path} mis à jour dans ${target.path}.`, "success");
+    ctx.ui.log(t("config.updatedIn", { path: option.path, file: target.path }), "success");
     return await loadConfig({ globalPath: ctx.paths.global, repoPath: ctx.paths.repo });
   } catch (error) {
     if (!(error instanceof ConfigError)) throw error;
@@ -104,7 +106,7 @@ async function resolveEditTarget(ctx: CommandContext, path: string, useRepo: boo
 
 function resolveTarget(ctx: CommandContext, useRepo: boolean): ConfigTarget {
   if (!useRepo) return { scope: "global", path: ctx.paths.global };
-  if (!ctx.paths.repo) throw new GitPilotError("--repo demande d'être dans un dépôt Git.");
+  if (!ctx.paths.repo) throw new GitPilotError(t("config.repoNeeded"));
   return { scope: "repo", path: ctx.paths.repo, globalPath: ctx.paths.global };
 }
 
@@ -116,7 +118,7 @@ async function editConfig(ctx: CommandContext, useRepo: boolean): Promise<void> 
     await execa(editor, [...editorArgs, target.path], { stdio: "inherit" });
   });
   await loadConfig({ globalPath: ctx.paths.global, repoPath: ctx.paths.repo });
-  ctx.ui.log("Configuration valide.", "success");
+  ctx.ui.log(t("config.valid"), "success");
 }
 
 async function createIfMissing(path: string): Promise<void> {

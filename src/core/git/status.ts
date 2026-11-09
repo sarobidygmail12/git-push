@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { GitError } from "../errors.js";
 import type { GitClient } from "./gitClient.js";
+import { t } from "../../lang/index.js";
 
 export type FileChange = {
   path: string;
@@ -157,17 +158,17 @@ export async function getOperationInProgress(git: GitClient): Promise<OperationI
 
 export async function assertNoOperationInProgress(git: GitClient): Promise<void> {
   const operation = await getOperationInProgress(git);
-  if (operation) throw new GitError(`Opération « ${operation} » en cours : termine-la ou annule-la d'abord.`);
+  if (operation) throw new GitError(t("status.operationInProgress", { operation }));
 }
 
 export function describeBranch(status: RepoStatus): string {
-  return status.branch ?? `HEAD détaché (${status.headHash?.slice(0, SHORT_HASH_LENGTH) ?? "?"})`;
+  return status.branch ?? t("head.detachedWithHash", { hash: status.headHash?.slice(0, SHORT_HASH_LENGTH) ?? "?" });
 }
 
 export function describeStatusLine(status: RepoStatus): string {
   const count = status.files.length;
-  const changes = count === 0 ? "aucune modification" : `${count} fichier(s) modifié(s)`;
-  return `branche ${describeBranch(status)}, ${changes}`;
+  const changes = count === 0 ? t("status.noChanges") : t("status.changedFiles", { count });
+  return t("status.line", { branch: describeBranch(status), changes });
 }
 
 /** Filet commun : après une étape en échec, on dit où en est le dépôt. */

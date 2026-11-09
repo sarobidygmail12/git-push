@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMessageKey, LANGUAGES, t } from "../../lang/index.js";
 
 const MAX_TCP_PORT = 65535;
 const DEFAULT_WEB_PORT = 4517;
@@ -9,41 +10,41 @@ const isSingleLine = (pattern: string): boolean => !pattern.includes("\n") && !p
 export const providerNameSchema = z.enum(["groq", "gemini", "ollama", "fallback"]);
 
 const cloudProviderSchema = z.strictObject({
-  apiKeyEnv: z.string().min(1).describe("Clé API, ou nom de la variable d'environnement qui la contient"),
-  model: z.string().min(1).describe("Modèle utilisé"),
+  apiKeyEnv: z.string().min(1),
+  model: z.string().min(1),
 });
 
 export const configSchema = z.strictObject({
   branches: z.strictObject({
-    develop: z.string().min(1).describe("Branche de base de /hotfix"),
-    preprod: z.string().min(1).describe("Branche de base de /fix"),
-    main: z.string().min(1).describe("Branche de production"),
-    protected: z.array(z.string().min(1)).describe("Branches qui demandent une confirmation avant un commit"),
+    develop: z.string().min(1),
+    preprod: z.string().min(1),
+    main: z.string().min(1),
+    protected: z.array(z.string().min(1)),
   }),
   prefixes: z.strictObject({
-    hotfix: z.string().describe("Préfixe des branches créées par /hotfix"),
-    fix: z.string().describe("Préfixe des branches créées par /fix"),
+    hotfix: z.string(),
+    fix: z.string(),
   }),
   commit: z.strictObject({
-    convention: z.enum(["conventional", "free"]).describe("Format des messages générés"),
-    autoPush: z.boolean().describe("Pousser automatiquement après un commit"),
-    addAll: z.boolean().describe("Indexer toutes les modifications avant un commit"),
+    convention: z.enum(["conventional", "free"]),
+    autoPush: z.boolean(),
+    addAll: z.boolean(),
   }),
   ignore: z
-    .array(z.string().min(1).refine(isSingleLine, "un motif doit tenir sur une ligne"))
-    .describe('Fichiers que Git doit ignorer, sans .gitignore. Exemple : ["dist/","*.log"]'),
+    .array(z.string().min(1).refine(isSingleLine, { error: () => t("config.issueSingleLine") })),
   ai: z.strictObject({
-    provider: providerNameSchema.describe("Provider essayé en premier"),
-    fallbackOrder: z.array(providerNameSchema).describe("Providers essayés ensuite, dans l'ordre"),
+    provider: providerNameSchema,
+    fallbackOrder: z.array(providerNameSchema),
     groq: cloudProviderSchema,
     gemini: cloudProviderSchema,
     ollama: z.strictObject({
-      baseUrl: z.url().describe("URL du serveur Ollama"),
-      model: z.string().min(1).describe("Modèle utilisé"),
+      baseUrl: z.url(),
+      model: z.string().min(1),
     }),
   }),
+  language: z.enum(LANGUAGES),
   web: z.strictObject({
-    port: z.number().int().min(1).max(MAX_TCP_PORT).describe("Port du serveur local (/log et /help)"),
+    port: z.number().int().min(1).max(MAX_TCP_PORT),
   }),
 });
 
@@ -55,6 +56,7 @@ export const DEFAULT_CONFIG: Config = {
   prefixes: { hotfix: "hotfix/", fix: "fix/" },
   commit: { convention: "conventional", autoPush: true, addAll: true },
   ignore: [],
+  language: "en",
   ai: {
     provider: "groq",
     fallbackOrder: ["groq", "gemini", "ollama", "fallback"],
@@ -80,11 +82,16 @@ function collectOptions(node: SchemaNode, path: string): ConfigOptionDoc[] {
       typeof child === "boolean" ? [] : collectOptions(child, path ? `${path}.${key}` : key),
     );
   }
-  return [{ path, type: describeType(node), description: node.description ?? "" }];
+  return [{ path, type: describeType(node), description: describeOption(path) }];
+}
+
+function describeOption(path: string): string {
+  const key = [`option.${path}`, `option.${path.split(".").at(-1) ?? ""}`].find(isMessageKey);
+  return key ? t(key) : "";
 }
 
 function describeType(node: SchemaNode): string {
   if (node.enum) return node.enum.join(" | ");
-  if (node.type === "array") return "liste";
-  return typeof node.type === "string" ? node.type : "valeur";
+  if (node.type === "array") return t("option.typeList");
+  return typeof node.type === "string" ? node.type : t("option.typeValue");
 }

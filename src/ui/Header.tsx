@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import type { HeaderState } from "../commands/session.js";
+import { t } from "../lang/index.js";
 
 const ORANGE = "#ffa500";
 
@@ -11,7 +12,7 @@ export function Header({ state, folder }: { state: HeaderState | undefined; fold
         gitpilot
       </Text>
       <Text dimColor>{folder}</Text>
-      {state ? <RepoSummary state={state} /> : <Text color="yellow">pas un dépôt Git</Text>}
+      {state ? <RepoSummary state={state} /> : <Text color="yellow">{t("ui.notRepo")}</Text>}
     </Box>
   );
 }

@@ -6,7 +6,10 @@
 
 Utilise Git avec des commandes simples, directement dans ton terminal.
 
-Tu tapes `/commit`, gitpilot écrit le message à ta place, et ton travail part sur GitHub. Tu débutes ? Cette page est faite pour toi. 👋
+Tu tapes `/commit`, gitpilot lit tes modifications, les explique dans le message de commit, et ton travail part sur GitHub. Tu débutes ? Cette page est faite pour toi. 👋
+
+> [!NOTE]
+> gitpilot est en anglais par défaut. Tape `/lang fr` pour l'avoir en français : cette page utilise les libellés français. Les commandes restent les mêmes dans toutes les langues.
 
 ## 🤔 Les mots à connaître
 
@@ -61,6 +64,8 @@ cd mon-projet
 gitpilot
 ```
 
+Tape `/lang fr` pour passer gitpilot en français. Ce choix est gardé pour la prochaine fois.
+
 **3. Relie ton dossier à GitHub.** Tape `/init`, appuie sur Entrée pour garder le dossier proposé, puis colle l'adresse copiée.
 
 **4. Sauvegarde et envoie ton travail.** Tape `/commit`. Si gitpilot te dit que `main` est protégée, réponds oui. Il te propose ensuite un message : choisis **Valider**.
@@ -104,6 +109,8 @@ Les lignes grises montrent les vraies commandes Git lancées pour toi. Pratique 
 | `/switch main` | Va sur une autre branche |
 | `/log` | Ouvre l'historique du projet dans ton navigateur |
 | `/undo` | Annule ton dernier commit pas encore envoyé, sans perdre ton travail |
+| `/config` | Liste tes réglages et permet de les changer |
+| `/lang` | Change la langue |
 | `/help` | Ouvre l'aide |
 | `/exit` | Quitte gitpilot |
 
@@ -171,7 +178,15 @@ source ~/.bashrc
 
 ## 🤖 Activer l'IA (optionnel)
 
-Sans IA, gitpilot écrit quand même un message simple à partir de la liste de tes fichiers. Pour de meilleurs messages avec Groq, qui est gratuit :
+Avec l'IA, gitpilot lit tes modifications et écrit un titre qui explique le commit, puis quelques phrases sur ce qui a changé et pourquoi :
+
+```text
+fix(session): discard expired sessions when reading
+
+The session read function now checks if a session's expiration time has passed. If it has, the entry is removed from the store and null is returned.
+```
+
+Sans IA, gitpilot peut seulement décrire les fichiers modifiés. Pour activer Groq, qui est gratuit :
 
 1. Crée une clé sur <https://console.groq.com/keys>.
 2. Ajoute cette ligne à ton `~/.bashrc`, puis ouvre un nouveau terminal :
@@ -180,8 +195,26 @@ Sans IA, gitpilot écrit quand même un message simple à partir de la liste de 
    export GROQ_API_KEY="ta-clé"
    ```
 
+   Ou tape `/config`, ouvre la ligne `ai.groq.apiKeyEnv` et colle ta clé. Elle est alors enregistrée dans `~/.gitpilot/config.json`, lisible par ton seul compte.
+
+Les messages de commit sont toujours en anglais, quelle que soit la langue de gitpilot. L'écran de proposition affiche `(groq)` quand l'IA a écrit le message et `(fallback)` sinon.
+
 > [!NOTE]
 > Tes modifications sont envoyées à Groq pour écrire le message. Le contenu des fichiers secrets (`.env*`, `*.pem`, `*.key`, `id_rsa*`) n'est jamais envoyé.
+
+## 🌍 Changer de langue
+
+gitpilot parle anglais, français, chinois et allemand. L'anglais est la langue par défaut.
+
+```text
+/lang       ouvre la liste des langues
+/lang fr    français
+/lang zh    chinois
+/lang de    allemand
+/lang en    anglais
+```
+
+Le changement est immédiat et gardé pour la prochaine fois. Les écrans, les réponses et les pages `/help` et `/log` sont traduits. Les commandes restent les mêmes (`/commit`, `/fix`…) et les erreurs venant directement de Git restent telles que Git les écrit.
 
 ---
 
@@ -213,7 +246,8 @@ Tu n'as pas besoin de cette partie pour commencer. Clique sur un titre pour l'ou
 | `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis crée la pull request vers la branche par défaut. Nécessite `gh` connecté |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Met de côté, récupère ou liste |
-| `/config` | | Affiche ou modifie la configuration |
+| `/config [show\|set\|edit] [--repo]` | | Liste les options et permet de les modifier |
+| `/lang [en\|fr\|zh\|de]` | `/language` | Change la langue des écrans et des réponses (anglais par défaut) |
 | `/help` | `/h` | Liste les commandes, ouvre l'aide détaillée |
 | `/clear` | | Efface l'écran |
 | `/exit` | `/quit` | Quitte |
@@ -246,7 +280,7 @@ La page `/help` documente chaque option.
 <details>
 <summary>🤖 Autres services d'IA</summary>
 
-gitpilot essaie `ai.provider`, puis les providers de `ai.fallbackOrder`. Il passe au suivant après 15 secondes, ou si le quota est dépassé ou la clé absente. Le dernier recours, `fallback`, construit un message à partir de la liste des fichiers.
+gitpilot essaie `ai.provider`, puis les providers de `ai.fallbackOrder`. Il passe au suivant après 15 secondes, ou si le quota est dépassé ou la clé absente. Le dernier recours, `fallback`, décrit les fichiers modifiés sans IA : **Régénérer** redonne donc le même message.
 
 **Gemini (palier gratuit).** Crée une clé sur <https://aistudio.google.com/apikey>, puis ajoute à ton `~/.bashrc` : `export GEMINI_API_KEY="..."`
 
@@ -270,6 +304,7 @@ Les modèles par défaut changent vite. Si un provider répond `HTTP 404`, chang
 - Si `develop` a divergé de son remote, `/hotfix` sauvegarde les commits locaux dans `backup/<branche>-<hash>`, puis aligne `develop` sur le remote. `/fix` s'arrête dans ce cas.
 - Si une étape échoue, le flux s'arrête et affiche l'erreur Git brute et l'état du dépôt.
 - Le serveur web n'écoute que sur `127.0.0.1` et refuse les requêtes dont l'en-tête `Host` n'est pas local.
+- `~/.gitpilot/config.json` peut contenir une clé API : ton seul compte peut le lire, et gitpilot masque la clé partout où il affiche la configuration.
 
 </details>
 
@@ -279,12 +314,15 @@ Les modèles par défaut changent vite. Si un provider répond `HTTP 404`, chang
 1. Crée `src/commands/maCommande.ts` :
 
    ```ts
+   import { t } from "../lang/index.js";
    import type { Command } from "./types.js";
 
    export const maCommande: Command = {
      name: "ma-commande",
      aliases: ["mc"],
-     description: "Une ligne affichée dans l'autocomplétion",
+     get description() {
+       return t("cmd.maCommande");
+     },
      usage: "/ma-commande <argument>",
      examples: ["/ma-commande valeur"],
      gitSteps: ["git rev-parse HEAD"],
@@ -295,9 +333,24 @@ Les modèles par défaut changent vite. Si un provider répond `HTTP 404`, chang
    };
    ```
 
-2. Ajoute-la au tableau de `src/commands/registry.ts`.
+2. Ajoute `"cmd.maCommande"` dans chaque fichier de `src/lang/`.
+3. Ajoute-la au tableau de `src/commands/registry.ts`.
 
 L'autocomplétion et la page `/help` se mettent à jour seules. Un `<` dans `usage` marque un argument obligatoire : Entrée complète alors la commande au lieu de l'exécuter.
+
+</details>
+
+<details>
+<summary>🌍 Traductions</summary>
+
+Tous les textes sont dans `src/lang/`, avec un fichier par langue : `en.json`, `fr.json`, `zh.json` et `de.json`. Pour changer un texte, modifie le fichier de sa langue. `{nom}` marque une valeur remplie par gitpilot : garde-la telle quelle.
+
+Chaque langue doit avoir les mêmes clés et les mêmes `{valeurs}` que `en.json`, sinon `yarn test` échoue.
+
+Pour ajouter une langue :
+
+1. Copie `src/lang/en.json` vers `src/lang/<code>.json` et traduis-le.
+2. Dans `src/lang/index.ts`, importe le fichier et ajoute le code à `LANGUAGES`, `LANGUAGE_NAMES` et `MESSAGES`.
 
 </details>
 
@@ -309,6 +362,8 @@ yarn build       # compile vers dist/ et copie les pages web
 yarn typecheck   # vérifie aussi les tests
 yarn test        # lance vitest
 ```
+
+La plupart des tests vérifient les messages français : `tests/helpers/frenchLocale.ts` choisit cette langue pour eux, et `tests/lang.test.ts` couvre les autres.
 
 La stack imposée : `ink`, `ink-text-input`, `execa`, `open`, `zod`, et `vitest` pour les tests. S'y ajoutent :
 

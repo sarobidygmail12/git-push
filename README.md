@@ -6,10 +6,10 @@
 
 Use Git with simple commands, right in your terminal.
 
-You type `/commit`, gitpilot writes the message for you, and your work goes to GitHub. New to Git? This page is for you. 👋
+You type `/commit`, gitpilot reads your changes, explains them in the commit message, and your work goes to GitHub. New to Git? This page is for you. 👋
 
 > [!NOTE]
-> gitpilot's screens are in French for now. This page gives the French words you'll see, with their meaning.
+> gitpilot's screens are in English by default. Type `/lang` to switch to French, Chinese or German. Commands stay the same in every language.
 
 ## 🤔 Words to know
 
@@ -66,7 +66,7 @@ gitpilot
 
 **3. Link your folder to GitHub.** Type `/init`, press Enter to keep the suggested folder, then paste the address you copied.
 
-**4. Save and send your work.** Type `/commit`. If gitpilot says `main` is protected (`branche protégée`), answer yes. It then suggests a message: choose **Valider** (accept).
+**4. Save and send your work.** Type `/commit`. If gitpilot says `main` is protected, answer yes. It then suggests a message: choose **Accept**.
 
 That's it, your project is on GitHub! 🎉
 
@@ -107,6 +107,8 @@ The grey lines show the real Git commands run for you. Handy for learning! 👀
 | `/switch main` | Moves to another branch |
 | `/log` | Opens the project history in your browser |
 | `/undo` | Cancels your last commit not sent yet, without losing your work |
+| `/config` | Lists your settings and lets you change them |
+| `/lang` | Changes the language |
 | `/help` | Opens the help |
 | `/exit` | Quits gitpilot |
 
@@ -136,7 +138,7 @@ the text from the other side
 >>>>>>> 
 ```
 
-Keep the right text, delete the `<<<<<<<`, `=======` and `>>>>>>>` lines, save, then choose **Continuer** (continue). Nervous? Choose **Annuler tout** (cancel everything) and you're back where you started.
+Keep the right text, delete the `<<<<<<<`, `=======` and `>>>>>>>` lines, save, then choose **Continue**. Nervous? Choose **Cancel everything** and you're back where you started.
 
 **😬 I made a mistake in my commit**
 
@@ -148,11 +150,11 @@ Keep the right text, delete the `<<<<<<<`, `=======` and `>>>>>>>` lines, save, 
 
 You'll then send your work yourself with `/push`.
 
-**🧭 The screen says `HEAD détaché` (detached HEAD)**
+**🧭 The screen says `detached HEAD`**
 
 You're not on any branch. Go back to the main one with `/switch main`.
 
-**🗂️ The screen says `pas un dépôt Git` (not a Git repository)**
+**🗂️ The screen says `not a Git repository`**
 
 You're not in a project tracked by Git. Go to the right folder, or type `/init`.
 
@@ -174,7 +176,15 @@ source ~/.bashrc
 
 ## 🤖 Turn on AI (optional)
 
-Without AI, gitpilot still writes a simple message from your list of files. For better messages with Groq, which is free:
+With AI, gitpilot reads your changes and writes a title that explains the commit, then a few sentences about what changed and why:
+
+```text
+fix(session): discard expired sessions when reading
+
+The session read function now checks if a session's expiration time has passed. If it has, the entry is removed from the store and null is returned.
+```
+
+Without AI, gitpilot can only describe the files that changed. To turn on Groq, which is free:
 
 1. Create a key at <https://console.groq.com/keys>.
 2. Add this line to your `~/.bashrc`, then open a new terminal:
@@ -183,10 +193,26 @@ Without AI, gitpilot still writes a simple message from your list of files. For 
    export GROQ_API_KEY="your-key"
    ```
 
-Generated commit messages are always in English.
+   Or type `/config`, open the `ai.groq.apiKeyEnv` line and paste your key there. It is then stored in `~/.gitpilot/config.json`, which only your account can read.
+
+Commit messages are always in English, whatever language gitpilot is in. The suggestion screen shows `(groq)` when the AI wrote the message and `(fallback)` when it didn't.
 
 > [!NOTE]
 > Your changes are sent to Groq to write the message. The content of secret files (`.env*`, `*.pem`, `*.key`, `id_rsa*`) is never sent.
+
+## 🌍 Change the language
+
+gitpilot speaks English, French, Chinese and German. English is the default.
+
+```text
+/lang       opens the list of languages
+/lang fr    French
+/lang zh    Chinese
+/lang de    German
+/lang en    English
+```
+
+The change is immediate and saved for next time. The screens, answers and the `/help` and `/log` pages are translated. The commands stay the same (`/commit`, `/fix`…) and errors that come straight from Git stay as Git writes them.
 
 ---
 
@@ -218,7 +244,8 @@ You don't need this part to get started. Click a title to open it.
 | `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then creates the pull request against the default branch. Requires a logged-in `gh` |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Sets aside, restores or lists |
-| `/config` | | Shows or changes the configuration |
+| `/config [show\|set\|edit] [--repo]` | | Lists the options and lets you edit them |
+| `/lang [en\|fr\|zh\|de]` | `/language` | Changes the language of the screens and answers (English by default) |
 | `/help` | `/h` | Lists commands, opens the detailed help |
 | `/clear` | | Clears the screen |
 | `/exit` | `/quit` | Quits |
@@ -251,7 +278,7 @@ The `/help` page documents every option.
 <details>
 <summary>🤖 Other AI services</summary>
 
-gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves to the next one after 15 seconds, or if the quota is exceeded or the key is missing. The last resort, `fallback`, builds a message from the list of files.
+gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves to the next one after 15 seconds, or if the quota is exceeded or the key is missing. The last resort, `fallback`, describes the changed files without AI, so **Regenerate** gives the same message.
 
 **Gemini (free tier).** Create a key at <https://aistudio.google.com/apikey>, then add to your `~/.bashrc`: `export GEMINI_API_KEY="..."`
 
@@ -275,6 +302,7 @@ Default models change quickly. If a provider answers `HTTP 404`, change its mode
 - If `develop` has diverged from its remote, `/hotfix` saves the local commits in `backup/<branch>-<hash>`, then aligns `develop` with the remote. `/fix` stops in that case.
 - If a step fails, the flow stops and shows the raw Git error and the repository state.
 - The web server only listens on `127.0.0.1` and refuses requests whose `Host` header isn't local.
+- `~/.gitpilot/config.json` can hold an API key: only your account can read it, and gitpilot masks the key wherever it shows the configuration.
 
 </details>
 
@@ -284,12 +312,15 @@ Default models change quickly. If a provider answers `HTTP 404`, change its mode
 1. Create `src/commands/myCommand.ts`:
 
    ```ts
+   import { t } from "../lang/index.js";
    import type { Command } from "./types.js";
 
    export const myCommand: Command = {
      name: "my-command",
      aliases: ["mc"],
-     description: "One line shown in the autocomplete",
+     get description() {
+       return t("cmd.myCommand");
+     },
      usage: "/my-command <argument>",
      examples: ["/my-command value"],
      gitSteps: ["git rev-parse HEAD"],
@@ -300,9 +331,24 @@ Default models change quickly. If a provider answers `HTTP 404`, change its mode
    };
    ```
 
-2. Add it to the array in `src/commands/registry.ts`.
+2. Add `"cmd.myCommand"` to each file in `src/lang/`.
+3. Add it to the array in `src/commands/registry.ts`.
 
 The autocomplete and the `/help` page update themselves. A `<` in `usage` marks a required argument: Enter then completes the command instead of running it.
+
+</details>
+
+<details>
+<summary>🌍 Translations</summary>
+
+Every text lives in `src/lang/`, with one file per language: `en.json`, `fr.json`, `zh.json` and `de.json`. To change a text, edit the file of that language. `{name}` marks a value filled in by gitpilot, so keep it as it is.
+
+Each language must have the same keys and the same `{values}` as `en.json`, otherwise `yarn test` fails.
+
+To add a language:
+
+1. Copy `src/lang/en.json` to `src/lang/<code>.json` and translate it.
+2. In `src/lang/index.ts`, import the file and add the code to `LANGUAGES`, `LANGUAGE_NAMES` and `MESSAGES`.
 
 </details>
 
@@ -314,6 +360,8 @@ yarn build       # compiles to dist/ and copies the web pages
 yarn typecheck   # also checks the tests
 yarn test        # runs vitest
 ```
+
+Most tests check the French messages: `tests/helpers/frenchLocale.ts` sets that language for them, and `tests/lang.test.ts` covers the others.
 
 The required stack: `ink`, `ink-text-input`, `execa`, `open`, `zod`, and `vitest` for tests. On top of that:
 

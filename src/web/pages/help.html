@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{web.htmlLang}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🚀 gitpilot · aide</title>
+<title>🚀 gitpilot · {{web.helpTitle}}</title>
 <style>
 :root { color-scheme: light; --bg:#f7f7f5; --panel:#fff; --text:#1d1f23; --muted:#667; --line:#e2e2de; --accent:#0b6bcb; --code:#f0efeb; }
 :root[data-theme="dark"] { color-scheme: dark; --bg:#14161a; --panel:#1c1f25; --text:#e7e8ea; --muted:#969ca8; --line:#2c3038; --accent:#6db3f8; --code:#272b33; }
@@ -31,15 +31,15 @@ th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line);
 </head>
 <body>
 <main>
-  <header><h1>gitpilot</h1><button id="theme" type="button">Thème</button></header>
-  <nav><a href="/log">Historique</a><a href="#commandes">Commandes</a><a href="#configuration">Configuration</a></nav>
+  <header><h1>gitpilot</h1><button id="theme" type="button">{{web.theme}}</button></header>
+  <nav><a href="/log">{{web.history}}</a><a href="#commandes">{{web.commands}}</a><a href="#configuration">{{web.configuration}}</a></nav>
   <p id="error" hidden></p>
-  <h2 id="commandes">Commandes</h2>
+  <h2 id="commandes">{{web.commands}}</h2>
   <div id="commands"></div>
-  <h2 id="configuration">Configuration</h2>
-  <p>Fichier global <code>~/.gitpilot/config.json</code>, surchargeable par <code>.gitpilot.json</code> à la racine du dépôt.</p>
-  <div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody id="options"></tbody></table></div>
-  <h2>Configuration effective</h2>
+  <h2 id="configuration">{{web.configuration}}</h2>
+  <p>{{web.configIntro}}</p>
+  <div class="table"><table><thead><tr><th>{{web.option}}</th><th>{{web.type}}</th><th>{{web.description}}</th></tr></thead><tbody id="options"></tbody></table></div>
+  <h2>{{web.effectiveConfig}}</h2>
   <pre id="effective"></pre>
 </main>
 <script>
@@ -74,11 +74,11 @@ function commandCard(command) {
   const card = element("article", undefined, "card");
   const title = element("h3", command.usage);
   if (command.aliases.length > 0) {
-    title.append(element("span", "  alias : " + command.aliases.map((alias) => "/" + alias).join(", "), "alias"));
+    title.append(element("span", "  {{web.alias}} " + command.aliases.map((alias) => "/" + alias).join(", "), "alias"));
   }
   card.append(title, element("p", command.description));
-  if (command.examples.length > 0) card.append(listSection("Exemples", command.examples));
-  if (command.gitSteps.length > 0) card.append(listSection("Étapes Git", command.gitSteps));
+  if (command.examples.length > 0) card.append(listSection("{{web.examples}}", command.examples));
+  if (command.gitSteps.length > 0) card.append(listSection("{{web.gitSteps}}", command.gitSteps));
   return card;
 }
 
@@ -97,11 +97,11 @@ async function load() {
     document.getElementById("commands").append(...data.commands.map(commandCard));
     document.getElementById("options").append(...data.configOptions.map(optionRow));
     document.getElementById("effective").textContent =
-      data.effectiveConfig ? JSON.stringify(data.effectiveConfig, null, 2) : "Configuration invalide : lance /config dans gitpilot.";
+      data.effectiveConfig ? JSON.stringify(data.effectiveConfig, null, 2) : "{{web.configInvalid}}";
   } catch (error) {
     const box = document.getElementById("error");
     box.hidden = false;
-    box.textContent = "Erreur : " + error.message;
+    box.textContent = "{{web.error}} " + error.message;
   }
 }
 load();

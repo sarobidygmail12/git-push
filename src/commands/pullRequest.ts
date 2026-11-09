@@ -3,57 +3,62 @@ import { pushCurrentBranch } from "../core/git/branches.js";
 import { createPullRequest, findOpenPullRequestUrl, getDefaultBranch, type NewPullRequest } from "../core/git/pullRequest.js";
 import { assertNoOperationInProgress, getStatus, type RepoStatus } from "../core/git/status.js";
 import type { Command, CommandContext } from "./types.js";
+import { t } from "../lang/index.js";
 
 export const pullRequestCommand: Command = {
   name: "pr",
   aliases: ["pull-request"],
-  description: "Crée une pull request pour la branche courante",
+  get description() {
+    return t("cmd.pr");
+  },
   usage: "/pr",
   examples: ["/pr"],
-  gitSteps: [
-    "gh repo view (trouve la branche par défaut)",
-    "gh pr view (s'arrête si une PR est déjà ouverte)",
-    "git push (ou git push -u origin <branche>) si des commits ne sont pas envoyés",
-    "gh pr create --title <titre> --body <description>",
-  ],
+  get gitSteps() {
+    return [
+    t("step.prRepoView"),
+    t("step.prViewStop"),
+    t("step.prPushIfNeeded"),
+    "gh pr create --title <title> --body <description>",
+  ];
+  },
   run: async (ctx) => {
     await assertNoOperationInProgress(ctx.git);
     const status = await getStatus(ctx.git);
-    if (!status.branch) throw new GitError("HEAD détaché : bascule d'abord sur une branche.");
-    if (!status.headHash) throw new GitError("Aucun commit à proposer : lance d'abord /commit.");
+    if (!status.branch) throw new GitError(t("head.switchFirst"));
+    if (!status.headHash) throw new GitError(t("pr.noCommit"));
 
     // Vérifié avant les questions : si gh n'est pas prêt, on l'apprend sans avoir rien saisi.
-    const defaultBranch = await ctx.ui.spinner("Connexion à GitHub…", () => getDefaultBranch(ctx.git.cwd));
+    const defaultBranch = await ctx.ui.spinner(t("spinner.connectGithub"), () => getDefaultBranch(ctx.git.cwd));
     if (status.branch === defaultBranch) {
-      throw new GitError(`Tu es sur ${defaultBranch}, la branche par défaut : crée d'abord une branche avec /branch.`);
+      throw new GitError(t("pr.onDefault", { branch: defaultBranch }));
     }
 
-    const openUrl = await ctx.ui.spinner("Recherche d'une pull request…", () => findOpenPullRequestUrl(ctx.git.cwd));
+    const openUrl = await ctx.ui.spinner(t("spinner.searchPr"), () => findOpenPullRequestUrl(ctx.git.cwd));
     if (openUrl) {
-      ctx.ui.log(`Une pull request est déjà ouverte : ${openUrl}`, "warn");
+      ctx.ui.log(t("pr.alreadyOpen", { url: openUrl }), "warn");
       return;
     }
 
     const draft = await askDraft(ctx);
     if (!draft) {
-      ctx.ui.log("Pull request annulée, rien n'a été envoyé.", "warn");
+      ctx.ui.log(t("pr.cancelled"), "warn");
       return;
     }
 
     if (status.files.length > 0) {
-      ctx.ui.log(`${status.files.length} fichier(s) non commité(s) ne feront pas partie de la pull request.`, "warn");
+      ctx.ui.log(t("pr.uncommitted", { count: status.files.length }), "warn");
     }
-    if (hasUnpushedCommits(status)) await ctx.ui.spinner("Push…", () => pushCurrentBranch(ctx.git, status));
-    const url = await ctx.ui.spinner("Création de la pull request…", () => createPullRequest(ctx.git.cwd, draft));
-    ctx.ui.log(`Pull request créée : ${url}`, "success");
+    if (hasUnpushedCommits(status)) await ctx.ui.spinner(t("spinner.push"), () => pushCurrentBranch(ctx.git, status));
+    const url = await ctx.ui.spinner(t("spinner.createPr"), () => createPullRequest(ctx.git.cwd, draft));
+    ctx.ui.log(t("pr.created", { url }), "success");
   },
 };
 
 async function askDraft(ctx: CommandContext): Promise<NewPullRequest | undefined> {
   const { stdout: lastSubject } = await ctx.git.run(["log", "-1", "--format=%s"]);
-  const title = (await ctx.ui.ask("Titre de la pull request", { initial: lastSubject }))?.trim();
+  const title = (await ctx.ui.ask(t("pr.titlePrompt"), { initial: lastSubject }))?.trim();
   if (!title) return undefined;
-  const body = (await ctx.ui.ask("Description (vide pour ignorer)"))?.trim();
+  const body = (await ctx.ui.ask(t("pr.bodyPrompt")))?.trim();
   return body === undefined ? undefined : { title, body };
 }
 

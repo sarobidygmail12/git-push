@@ -1,4 +1,5 @@
 import type { Config } from "./schema.js";
+import { t } from "../../lang/index.js";
 
 const VISIBLE_KEY_PREFIX_LENGTH = 4;
 
@@ -8,7 +9,7 @@ export function looksLikeApiKey(value: string): boolean {
 }
 
 function maskIfApiKey(value: string): string {
-  return looksLikeApiKey(value) ? `${value.slice(0, VISIBLE_KEY_PREFIX_LENGTH)}… (masquée)` : value;
+  return looksLikeApiKey(value) ? `${value.slice(0, VISIBLE_KEY_PREFIX_LENGTH)}… (${t("config.maskedKey")})` : value;
 }
 
 /** À appliquer avant tout affichage : une clé écrite dans `apiKeyEnv` ne doit apparaître ni au terminal ni dans le navigateur. */

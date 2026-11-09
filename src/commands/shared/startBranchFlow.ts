@@ -5,6 +5,7 @@ import { addLocalExclude } from "../../core/git/localExclude.js";
 import { getStatus } from "../../core/git/status.js";
 import type { CommandContext } from "../types.js";
 import { commitFlow } from "./commitFlow.js";
+import { t } from "../../lang/index.js";
 
 export type BaseBranchKey = "develop" | "preprod";
 
@@ -19,13 +20,13 @@ export async function startBranchFlow(ctx: CommandContext, request: StartBranchR
   const configuredBase = ctx.config.branches[request.baseKey];
   const base = await chooseBase(ctx, configuredBase);
   if (!base) {
-    ctx.ui.log("Annulé, aucune branche de base.", "warn");
+    ctx.ui.log(t("branch.cancelNoBase"), "warn");
     return;
   }
 
-  const name = request.name ?? (await ctx.ui.ask(`Nom de la branche (${request.prefix}…)`))?.trim();
+  const name = request.name ?? (await ctx.ui.ask(t("branch.nameQuestion", { prefix: request.prefix })))?.trim();
   if (!name) {
-    ctx.ui.log("Annulé, aucun nom de branche.", "warn");
+    ctx.ui.log(t("branch.cancelNoName"), "warn");
     return;
   }
 
@@ -35,25 +36,25 @@ export async function startBranchFlow(ctx: CommandContext, request: StartBranchR
   const { files } = await getStatus(ctx.git);
   const hadChanges = files.length > 0;
   if (hadChanges && (await commitFlow(ctx)) === "cancelled") {
-    ctx.ui.log("Arrêt : les modifications n'ont pas été committées, aucun changement de branche.", "warn");
+    ctx.ui.log(t("branch.stopNotCommitted"), "warn");
     return;
   }
 
   const started = await startBranchFrom(ctx.git, base, request.prefix, name, {
     forceDivergedBase: request.forceDivergedBase ?? false,
   });
-  const steps = [...(hadChanges ? ["commit des modifications en cours"] : []), ...started.steps];
+  const steps = [...(hadChanges ? [t("branch.stepCommit")] : []), ...started.steps];
   if (started.backupBranch) {
-    ctx.ui.log(`${base} avait divergé : aligné sur le remote. Tes anciens commits locaux sont dans ${started.backupBranch}.`, "warn");
+    ctx.ui.log(t("branch.baseDiverged", { base, backup: started.backupBranch }), "warn");
   }
-  ctx.ui.log(`Branche ${started.branch} créée depuis ${base} :\n${steps.map((step) => `  ✓ ${step}`).join("\n")}`, "success");
+  ctx.ui.log(t("branch.startedFrom", { branch: started.branch, base, steps: steps.map((step) => `  ✓ ${step}`).join("\n") }), "success");
 
   if (base !== configuredBase) await rememberBase(ctx, request.baseKey, base);
 }
 
 async function chooseBase(ctx: CommandContext, configuredBase: string): Promise<string | undefined> {
   if (await branchExists(ctx.git, configuredBase)) return configuredBase;
-  const answer = await ctx.ui.ask(`La branche de base « ${configuredBase} » n'existe pas localement. Nom de la branche à utiliser`);
+  const answer = await ctx.ui.ask(t("branch.baseAsk", { base: configuredBase }));
   return answer?.trim() || undefined;
 }
 
@@ -68,5 +69,5 @@ async function rememberBase(ctx: CommandContext, key: BaseBranchKey, base: strin
   if (target.scope === "repo") await addLocalExclude(ctx.git, `/${REPO_CONFIG_FILENAME}`);
   // Encodé en JSON : une branche nommée « 123 » serait sinon lue comme un nombre.
   await setConfigValue(target, configPath, JSON.stringify(base));
-  ctx.ui.log(`${configPath} = ${base} enregistré dans ${target.path}.`, "success");
+  ctx.ui.log(t("branch.baseSaved", { path: configPath, base, file: target.path }), "success");
 }

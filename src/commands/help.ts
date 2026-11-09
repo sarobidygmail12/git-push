@@ -1,12 +1,15 @@
 import { openPage } from "./shared/openBrowser.js";
 import type { Command } from "./types.js";
+import { t } from "../lang/index.js";
 
 const NAME_COLUMN_WIDTH = 16;
 
 export const helpCommand: Command = {
   name: "help",
   aliases: ["h"],
-  description: "Liste les commandes et ouvre l'aide complète",
+  get description() {
+    return t("cmd.help");
+  },
   usage: "/help",
   examples: ["/help"],
   gitSteps: [],

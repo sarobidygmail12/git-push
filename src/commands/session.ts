@@ -5,6 +5,7 @@ import { ConfigError, GitError, GitPilotError } from "../core/errors.js";
 import { createGitClient, type GitClient } from "../core/git/gitClient.js";
 import { syncIgnoredPatterns } from "../core/git/localExclude.js";
 import { countChanges, describeBranch, describeRepoState, getRepoRoot, getStatus, type ChangeCounts } from "../core/git/status.js";
+import { setLanguage, t } from "../lang/index.js";
 import { createWebServer } from "../web/server.js";
 import { parseInput } from "./parseInput.js";
 import { findCommand, suggestInput, type SuggestionList } from "./suggest.js";
@@ -70,6 +71,7 @@ export function createSession(options: SessionOptions): ReplSession {
   const runCommand = async (command: Command, args: string[]): Promise<void> => {
     await applyIgnoredFiles();
     const config = await resolveConfig(command, readConfig, ui);
+    setLanguage(config.language);
     await command.run(buildContext(git, config, await resolvePaths()), args);
     // Après /config ou /init : l'en-tête reflète les nouveaux motifs sans attendre la commande suivante.
     await applyIgnoredFiles();
@@ -79,12 +81,12 @@ export function createSession(options: SessionOptions): ReplSession {
     async execute(line) {
       const parsed = parseInput(line);
       if (!parsed) {
-        ui.log("Les commandes commencent par /. Tape /help pour la liste.", "warn");
+        ui.log(t("session.startWithSlash"), "warn");
         return;
       }
       const command = findCommand(commands, parsed.name);
       if (!command) {
-        ui.log(`Commande inconnue : /${parsed.name}. Tape /help pour la liste.`, "error");
+        ui.log(t("session.unknownCommand", { name: parsed.name }), "error");
         return;
       }
       try {
@@ -120,9 +122,9 @@ async function reportError(error: unknown, ui: CommandUi, silentGit: GitClient):
 async function reportRepoState(ui: CommandUi, silentGit: GitClient): Promise<void> {
   try {
     const state = await describeRepoState(silentGit);
-    if (state) ui.log(`État du dépôt : ${state}`, "warn");
+    if (state) ui.log(t("session.repoState", { state }), "warn");
   } catch {
-    ui.log("État du dépôt indisponible.", "warn");
+    ui.log(t("session.repoStateUnavailable"), "warn");
   }
 }
 
