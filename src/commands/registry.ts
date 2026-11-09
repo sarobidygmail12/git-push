@@ -14,6 +14,7 @@ import { hotfixCommand } from "./hotfix.js";
 import { initCommand } from "./init.js";
 import { logCommand } from "./log.js";
 import { pullCommand } from "./pull.js";
+import { pullRequestCommand } from "./pullRequest.js";
 import { pushCommand } from "./push.js";
 import { rebaseCommand } from "./rebase.js";
 import { stashCommand } from "./stash.js";
@@ -39,6 +40,7 @@ export const commands: readonly Command[] = [
   pullCommand,
   pushCommand,
   firstPushCommand,
+  pullRequestCommand,
   fetchCommand,
   stashCommand,
   configCommand,

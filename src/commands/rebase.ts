@@ -2,6 +2,7 @@ import { GitError } from "../core/errors.js";
 import { isValidBranchName } from "../core/git/branches.js";
 import { assertNoOperationInProgress, getStatus } from "../core/git/status.js";
 import { isSequenceRunning, resolveSequence, startRebase } from "./shared/resolveSequence.js";
+import { reportPullRequest } from "./shared/reportPullRequest.js";
 import { secureWorkingTree } from "./shared/secureWorkingTree.js";
 import type { Command, CommandContext } from "./types.js";
 
@@ -87,4 +88,5 @@ async function offerForcePush(ctx: CommandContext): Promise<void> {
   }
   await ctx.ui.spinner("Push…", () => ctx.git.run(["push", "--force-with-lease"], { destructiveConfirmed: true }));
   ctx.ui.log("Poussé.", "success");
+  await reportPullRequest(ctx);
 }

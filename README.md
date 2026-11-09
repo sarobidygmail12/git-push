@@ -2,6 +2,8 @@
 
 🇬🇧 English | [🇫🇷 Français](README.fr.md)
 
+🌐 [Visit the landing page](https://claude.ai/artifact/X84wVTqr1GgwitrGVLjxmp)
+
 Use Git with simple commands, right in your terminal.
 
 You type `/commit`, gitpilot writes the message for you, and your work goes to GitHub. New to Git? This page is for you. 👋
@@ -100,6 +102,7 @@ The grey lines show the real Git commands run for you. Handy for learning! 👀
 | `/pull` | Brings what's new from GitHub |
 | `/push` | Sends your commits to GitHub |
 | `/first-push` | Does your very first send when GitHub already has files |
+| `/pr` | Creates a pull request, asking for its title and description |
 | `/branch my-idea` | Creates a new branch and moves to it |
 | `/switch main` | Moves to another branch |
 | `/log` | Opens the project history in your browser |
@@ -210,8 +213,9 @@ You don't need this part to get started. Click a title to open it.
 | `/cherry-pick <hash...>` | `/cp` | Applies commits, with guided conflict resolution |
 | `/rebase [develop\|preprod]` | `/rb` | Rebases on the latest remote version, with guided conflict resolution |
 | `/pull` | | `git pull --ff-only` |
-| `/push` | | Pushes, sets the upstream if needed |
+| `/push` | | Pushes, sets the upstream if needed, shows the link to the open pull request if there is one |
 | `/first-push` | `/fp` | First publish: brings in the commits already on the remote, then pushes and sets the upstream. Never force-pushes |
+| `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then creates the pull request against the default branch. Requires a logged-in `gh` |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Sets aside, restores or lists |
 | `/config` | | Shows or changes the configuration |

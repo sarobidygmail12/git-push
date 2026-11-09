@@ -4,6 +4,7 @@ import { getStagedChanges, type StagedChanges } from "../../core/git/diff.js";
 import { isSensitivePath } from "../../core/git/sensitive.js";
 import { assertNoOperationInProgress, getStatus, isStaged, type FileChange, type RepoStatus } from "../../core/git/status.js";
 import type { CommandContext } from "../types.js";
+import { reportPullRequest } from "./reportPullRequest.js";
 
 export type CommitFlowResult = "committed" | "nothing" | "cancelled";
 
@@ -124,4 +125,5 @@ async function pushIfEnabled(ctx: CommandContext, status: RepoStatus): Promise<v
   }
   await ctx.ui.spinner("Push…", () => pushCurrentBranch(ctx.git, status));
   ctx.ui.log("Poussé.", "success");
+  await reportPullRequest(ctx);
 }

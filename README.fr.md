@@ -2,6 +2,8 @@
 
 [🇬🇧 English](README.md) | 🇫🇷 Français
 
+🌐 [Voir la page d'accueil](https://claude.ai/artifact/X84wVTqr1GgwitrGVLjxmp)
+
 Utilise Git avec des commandes simples, directement dans ton terminal.
 
 Tu tapes `/commit`, gitpilot écrit le message à ta place, et ton travail part sur GitHub. Tu débutes ? Cette page est faite pour toi. 👋
@@ -97,6 +99,7 @@ Les lignes grises montrent les vraies commandes Git lancées pour toi. Pratique 
 | `/pull` | Récupère les nouveautés de GitHub |
 | `/push` | Envoie tes commits sur GitHub |
 | `/first-push` | Fait ton tout premier envoi quand GitHub contient déjà des fichiers |
+| `/pr` | Crée une pull request en demandant son titre et sa description |
 | `/branch mon-idee` | Crée une nouvelle branche et va dessus |
 | `/switch main` | Va sur une autre branche |
 | `/log` | Ouvre l'historique du projet dans ton navigateur |
@@ -205,8 +208,9 @@ Tu n'as pas besoin de cette partie pour commencer. Clique sur un titre pour l'ou
 | `/cherry-pick <hash...>` | `/cp` | Applique des commits, avec résolution guidée des conflits |
 | `/rebase [develop\|preprod]` | `/rb` | Rebase sur la dernière version distante, avec résolution guidée des conflits |
 | `/pull` | | `git pull --ff-only` |
-| `/push` | | Pousse, pose l'upstream si besoin |
+| `/push` | | Pousse, pose l'upstream si besoin, affiche le lien de la pull request ouverte s'il y en a une |
 | `/first-push` | `/fp` | Première publication : intègre les commits déjà sur le remote, puis pousse et pose l'upstream. Ne force jamais le push |
+| `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis crée la pull request vers la branche par défaut. Nécessite `gh` connecté |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Met de côté, récupère ou liste |
 | `/config` | | Affiche ou modifie la configuration |
