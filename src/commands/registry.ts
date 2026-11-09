@@ -15,6 +15,7 @@ import { helpCommand } from "./help.js";
 import { hotfixCommand } from "./hotfix.js";
 import { initCommand } from "./init.js";
 import { logCommand } from "./log.js";
+import { loginCommand } from "./login.js";
 import { pullCommand } from "./pull.js";
 import { pullRequestCommand } from "./pullRequest.js";
 import { pushCommand } from "./push.js";
@@ -27,6 +28,7 @@ import type { Command } from "./types.js";
 
 export const commands: readonly Command[] = [
   initCommand,
+  loginCommand,
   commitCommand,
   amendCommand,
   undoCommand,

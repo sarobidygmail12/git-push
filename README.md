@@ -47,14 +47,12 @@ git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
 ```
 
-**3. Connect to GitHub.** git-push can't ask you for a password, so create an SSH key once:
+**3. Create an access token.** git-push connects with a token, never a password. Give it the right to read and write repositories:
 
-```bash
-ssh-keygen -t ed25519 -C "you@example.com"
-cat ~/.ssh/id_ed25519.pub
-```
+- GitHub: <https://github.com/settings/tokens> (scope `repo`)
+- GitLab: <https://gitlab.com/-/user_settings/personal_access_tokens> (scope `write_repository`)
 
-Paste the printed line at <https://github.com/settings/keys>. Then always use the **SSH** address of your repositories, the one that starts with `git@github.com:`.
+Then start `git-push`, type `/login` and paste the token. Git keeps it in its own credential helper. Always use the **HTTPS** address of your repositories, the one that starts with `https://`.
 
 ## 🎬 Your first project, step by step
 
@@ -105,6 +103,7 @@ The grey lines show the real Git commands run for you. Handy for learning! 👀
 | `/pull` | Brings what's new from GitHub |
 | `/push` | Sends your commits to GitHub |
 | `/first-push` | Does your very first send when GitHub already has files |
+| `/login` | Connects to GitHub, GitLab or another Git server with an access token |
 | `/pr` | Creates a pull request, asking for its title and description |
 | `/branch my-idea` | Creates a new branch and moves to it |
 | `/switch main` | Moves to another branch |
@@ -127,7 +126,7 @@ GitHub has changes you don't have. Type `/pull`, then `/push`. If `/pull` refuse
 
 **🔐 Sending fails because of a password**
 
-Check that your SSH key is on GitHub (step 3 above) and that `git remote -v` shows an address starting with `git@github.com:`.
+Type `/login` again with a new token, and check that `git remote -v` shows an address starting with `https://`.
 
 **⚔️ A conflict**
 
@@ -229,6 +228,7 @@ You don't need this part to get started. Click a title to open it.
 | Command | Alias | Purpose |
 | --- | --- | --- |
 | `/init` | | Creates a Git repository in the chosen folder (current folder by default) and links it to the given remote |
+| `/login` | | Asks for an access token, checks it against `origin` when that is an HTTPS remote, then stores it with `git credential approve`. Works with any Git server |
 | `/commit ["message"]` | `/cm` | Stages, generates the message, commits, pushes |
 | `/amend ["message"]` | | Changes the last unpushed commit |
 | `/undo` | | Cancels the last unpushed commit, keeps its changes |
@@ -245,7 +245,7 @@ You don't need this part to get started. Click a title to open it.
 | `/pull` | | `git pull --ff-only` |
 | `/push` | | Pushes, sets the upstream if needed |
 | `/first-push` | `/fp` | First publish: brings in the commits already on the remote, then pushes and sets the upstream. Never force-pushes |
-| `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then opens the GitHub page with both filled in: confirm the pull request there. Uses `git` only |
+| `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then opens the GitHub or GitLab page with both filled in: confirm it there. Uses `git` only |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Sets aside, restores or lists |
 | `/config [show\|set\|edit] [--repo]` | | Lists the options and lets you edit them |

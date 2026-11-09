@@ -89,6 +89,18 @@ describe("adresse de la pull request", () => {
     expect(toRepositoryWebUrl(remote)).toBeUndefined();
   });
 
+  it("ouvre une merge request sur GitLab, sous-groupes compris", () => {
+    const url = new URL(buildPullRequestUrl("https://gitlab.com/acme/team/app", "main", "feature/a", { title: "Titre", body: "Détail" }));
+
+    expect(url.origin + url.pathname).toBe("https://gitlab.com/acme/team/app/-/merge_requests/new");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      "merge_request[source_branch]": "feature/a",
+      "merge_request[target_branch]": "main",
+      "merge_request[title]": "Titre",
+      "merge_request[description]": "Détail",
+    });
+  });
+
   it("encode les caractères spéciaux sans casser les / des branches", () => {
     const url = buildPullRequestUrl("https://github.com/acme/app", "main", "feature/a#1", { title: "a&b", body: "" });
 

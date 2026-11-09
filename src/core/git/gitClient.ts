@@ -7,6 +7,10 @@ export type GitResult = { stdout: string; stderr: string; exitCode: number };
 export type GitRunOptions = {
   allowFailure?: boolean;
   destructiveConfirmed?: boolean;
+  /** Lu par git sur son entrée standard, jamais affiché : peut contenir un secret. */
+  input?: string;
+  /** Jamais affiché : peut contenir un secret. */
+  env?: Readonly<Record<string, string>>;
 };
 
 export interface GitClient {
@@ -36,9 +40,9 @@ export function createGitClient({ cwd, onCommand }: GitClientOptions): GitClient
       const result = await execa("git", [...args], {
         cwd,
         reject: false,
-        stdin: "ignore",
         detached: true,
-        env: GIT_ENVIRONMENT,
+        env: { ...GIT_ENVIRONMENT, ...options.env },
+        ...(options.input === undefined ? { stdin: "ignore" as const } : { input: options.input }),
       });
       return toGitResult(args, options, {
         stdout: String(result.stdout ?? ""),

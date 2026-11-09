@@ -8,7 +8,7 @@ export type SelectChoice<T> = { label: string; value: T };
 
 export interface CommandUi {
   log(message: string, level?: LogLevel): void;
-  ask(question: string, options?: { initial?: string }): Promise<string | undefined>;
+  ask(question: string, options?: { initial?: string; secret?: boolean }): Promise<string | undefined>;
   confirm(question: string): Promise<boolean>;
   select<T>(question: string, choices: readonly SelectChoice<T>[], options?: { initial?: T }): Promise<T | undefined>;
   spinner<T>(label: string, task: () => Promise<T>): Promise<T>;

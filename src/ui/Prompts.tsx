@@ -24,7 +24,7 @@ function AskPrompt({ request }: { request: Extract<PromptRequest, { kind: "ask" 
       <Text bold>{request.question}</Text>
       <Box>
         <Text color="cyan">{"> "}</Text>
-        <TextInput value={value} onChange={setValue} onSubmit={request.resolve} />
+        <TextInput value={value} onChange={setValue} onSubmit={request.resolve} {...(request.secret ? { mask: "*" } : {})} />
       </Box>
       <Text dimColor>{t("ui.askHint")}</Text>
     </Box>
