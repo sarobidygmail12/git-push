@@ -7,6 +7,7 @@ import { configCommand } from "./config.js";
 import { diffCommand } from "./diff.js";
 import { exitCommand } from "./exit.js";
 import { fetchCommand } from "./fetch.js";
+import { firstPushCommand } from "./firstPush.js";
 import { fixCommand } from "./fix.js";
 import { helpCommand } from "./help.js";
 import { hotfixCommand } from "./hotfix.js";
@@ -37,6 +38,7 @@ export const commands: readonly Command[] = [
   rebaseCommand,
   pullCommand,
   pushCommand,
+  firstPushCommand,
   fetchCommand,
   stashCommand,
   configCommand,

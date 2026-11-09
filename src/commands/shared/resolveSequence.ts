@@ -1,3 +1,4 @@
+import { GitError } from "../../core/errors.js";
 import { getOperationInProgress, getStatus, isConflict, isConflictResolved } from "../../core/git/status.js";
 import type { CommandContext } from "../types.js";
 
@@ -15,6 +16,15 @@ const CONFLICT_CHOICES = [
 
 export async function isSequenceRunning(ctx: CommandContext, operation: SequenceOperation): Promise<boolean> {
   return (await getOperationInProgress(ctx.git)) === operation;
+}
+
+/** Un conflit laisse le rebase en cours pour `resolveSequence` ; seul un échec au démarrage lève une erreur. */
+export async function startRebase(ctx: CommandContext, target: string): Promise<void> {
+  const args = ["rebase", target];
+  const result = await ctx.git.run(args, { allowFailure: true });
+  if (result.exitCode === 0 || (await isSequenceRunning(ctx, "rebase"))) return;
+  const output = result.stderr || result.stdout;
+  throw new GitError(output, { args, exitCode: result.exitCode, stderr: output });
 }
 
 /** Accompagne un cherry-pick ou un rebase commit après commit, jusqu'à ce qu'il soit fini ou abandonné. */

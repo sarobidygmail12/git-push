@@ -1,7 +1,7 @@
 import { GitError } from "../core/errors.js";
 import { isValidBranchName } from "../core/git/branches.js";
 import { assertNoOperationInProgress, getStatus } from "../core/git/status.js";
-import { isSequenceRunning, resolveSequence } from "./shared/resolveSequence.js";
+import { isSequenceRunning, resolveSequence, startRebase } from "./shared/resolveSequence.js";
 import { secureWorkingTree } from "./shared/secureWorkingTree.js";
 import type { Command, CommandContext } from "./types.js";
 
@@ -60,12 +60,7 @@ async function rebaseOnLatest(ctx: CommandContext, base: string): Promise<void> 
     return;
   }
 
-  const target = `${REMOTE}/${base}`;
-  const result = await ctx.git.run(["rebase", target], { allowFailure: true });
-  if (result.exitCode !== 0 && !(await isSequenceRunning(ctx, "rebase"))) {
-    const output = result.stderr || result.stdout;
-    throw new GitError(output, { args: ["rebase", target], exitCode: result.exitCode, stderr: output });
-  }
+  await startRebase(ctx, `${REMOTE}/${base}`);
   await finishRebase(ctx);
 }
 

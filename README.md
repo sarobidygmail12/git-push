@@ -87,6 +87,17 @@ Tes branches s'appellent autrement ? Change-les avec `/config set branches.devel
 
 Pendant `/rebase` ou `/cherry-pick`, gitpilot liste les fichiers en conflit et attend. Tu les corriges dans ton éditeur, puis tu choisis : continuer, tout annuler (`--abort`) ou passer ce commit (`--skip`). Si tu choisis de continuer alors qu'il reste des conflits, il te dit lesquels.
 
+### 🎉 Ce qui se passe avec `/first-push`
+
+Tu viens de créer ton dépôt sur GitHub avec un README ou une LICENSE, et ton `git push` se fait rejeter avec `fetch first` ? C'est le cas classique : GitHub a son propre premier commit, et le tien n'a aucun lien avec lui. `/first-push` règle ça en une commande :
+
+1. Il récupère ce qu'il y a sur `origin`.
+2. Si tu as des modifications en cours, il te propose de les committer ou de les mettre de côté.
+3. Il replace tes commits par-dessus ceux du dépôt distant. En cas de conflit, tu retrouves la résolution guidée.
+4. Il pousse et relie ta branche, pour que `/push` suffise ensuite.
+
+Il ne force jamais le push, donc les fichiers créés sur GitHub restent en place. Si la branche est déjà reliée au remote, il s'arrête et te renvoie vers `/push`.
+
 ## 🤖 Les messages générés par l'IA
 
 gitpilot essaie `ai.provider`, puis les providers de `ai.fallbackOrder`. Il passe au suivant après 15 secondes, ou si le quota est dépassé ou la clé absente. Le dernier recours, `fallback`, construit un message à partir de la liste des fichiers. L'IA ne bloque donc jamais un commit.
@@ -151,6 +162,7 @@ La page `/help` documente chaque option.
 | `/rebase [develop\|preprod]` | `/rb` | Rebase sur la dernière version distante, avec résolution guidée des conflits |
 | `/pull` | | `git pull --ff-only` |
 | `/push` | | Pousse, pose l'upstream si besoin |
+| `/first-push` | `/fp` | Première publication : intègre les commits déjà sur le remote (README, LICENSE…), puis pousse et pose l'upstream |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Met de côté, récupère ou liste |
 | `/config` | | Voir [Configuration](#️-configuration) |
