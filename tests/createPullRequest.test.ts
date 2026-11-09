@@ -1,75 +1,53 @@
-import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import open from "open";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { pullRequestCommand } from "../src/commands/pullRequest.js";
-import { getDefaultBranch } from "../src/core/git/pullRequest.js";
+import { buildPullRequestUrl, toRepositoryWebUrl } from "../src/core/git/pullRequest.js";
 import { createFakeContext, type FakeAnswers } from "./helpers/fakeContext.js";
 import { createTempRepo, type TempRepo } from "./helpers/tempRepo.js";
 
-const NEW_URL = "https://github.com/acme/app/pull/7";
-const OPEN_URL = "https://github.com/acme/app/pull/3";
+vi.mock("open", () => ({ default: vi.fn(() => Promise.resolve({ once: vi.fn() })) }));
+
+const GITHUB_REMOTE = "git@github.com:acme/app.git";
 const BRANCH = "feature/a";
-const EXECUTABLE_MODE = 0o755;
 
 describe("/pr", () => {
   let repo: TempRepo;
-  const originalPath = process.env.PATH;
-
-  const argsFile = (): string => join(repo.root, "gh-create-args");
-
-  const installFakeGh = ({ prView = "exit 1", prCreate = `echo ${NEW_URL}` } = {}): void => {
-    const path = join(repo.root, "gh");
-    writeFileSync(
-      path,
-      `#!/bin/sh
-case "$1 $2" in
-  "repo view") echo main ;;
-  "pr view") ${prView} ;;
-  "pr create")
-    printf '%s\\n' "$@" > "${argsFile()}"
-    ${prCreate} ;;
-esac
-`,
-    );
-    chmodSync(path, EXECUTABLE_MODE);
-    process.env.PATH = `${repo.root}${delimiter}${originalPath ?? ""}`;
-  };
 
   beforeEach(() => {
+    vi.mocked(open).mockClear();
     repo = createTempRepo();
     repo.git("switch", "--quiet", "-c", BRANCH);
     repo.commit("a.txt", "a\n", "ajoute a");
-    installFakeGh();
   });
-  afterEach(() => {
-    process.env.PATH = originalPath;
-    repo.cleanup();
-  });
+  afterEach(() => repo.cleanup());
 
-  const run = async (answers: FakeAnswers): Promise<string[]> => {
+  /** Le remote de test est un dossier local : seule l'adresse lue pour construire l'URL est remplacée. */
+  const run = async (answers: FakeAnswers, remoteUrl: string = GITHUB_REMOTE): Promise<string[]> => {
     const ctx = createFakeContext(repo.work, answers);
+    const realRun = ctx.git.run.bind(ctx.git);
+    vi.spyOn(ctx.git, "run").mockImplementation(async (args, options) => {
+      const result = await realRun(args, options);
+      return args.join(" ") === "remote get-url origin" ? { ...result, stdout: remoteUrl } : result;
+    });
     await pullRequestCommand.run(ctx, []);
     return vi.mocked(ctx.ui.log).mock.calls.map(([message]) => message);
   };
 
   const remoteHead = (): string => repo.git("ls-remote", "origin", `refs/heads/${BRANCH}`).split("\t")[0] ?? "";
-  const createArgs = (): string[] => {
-    const lines = readFileSync(argsFile(), "utf8");
-    return lines.slice(0, lines.lastIndexOf("\n")).split("\n");
-  };
 
-  it("pousse la branche puis crée la PR avec le titre et la description saisis", async () => {
+  it("pousse la branche puis ouvre la page GitHub avec le titre et la description", async () => {
     const logs = await run({ ask: ["Mon titre", "Ma description"] });
 
+    const url = "https://github.com/acme/app/compare/main...feature/a?expand=1&title=Mon+titre&body=Ma+description";
     expect(remoteHead()).toBe(repo.git("rev-parse", "HEAD"));
-    expect(createArgs()).toEqual(["pr", "create", "--title", "Mon titre", "--body", "Ma description"]);
-    expect(logs).toEqual([`Pull request créée : ${NEW_URL}`]);
+    expect(open).toHaveBeenCalledWith(url);
+    expect(logs).toEqual(["Termine la pull request dans ton navigateur :", url]);
   });
 
-  it("accepte une description vide", async () => {
+  it("omet une description vide", async () => {
     await run({ ask: ["Mon titre", ""] });
 
-    expect(createArgs()).toEqual(["pr", "create", "--title", "Mon titre", "--body", ""]);
+    expect(open).toHaveBeenCalledWith("https://github.com/acme/app/compare/main...feature/a?expand=1&title=Mon+titre");
   });
 
   it.each([
@@ -81,16 +59,7 @@ esac
 
     expect(logs).toEqual(["Pull request annulée, rien n'a été envoyé."]);
     expect(remoteHead()).toBe("");
-    expect(existsSync(argsFile())).toBe(false);
-  });
-
-  it("ne recrée pas une PR déjà ouverte", async () => {
-    installFakeGh({ prView: `echo '{"url":"${OPEN_URL}","state":"OPEN"}'` });
-
-    const logs = await run({ ask: ["Mon titre", "Ma description"] });
-
-    expect(logs).toEqual([`Une pull request est déjà ouverte : ${OPEN_URL}`]);
-    expect(existsSync(argsFile())).toBe(false);
+    expect(open).not.toHaveBeenCalled();
   });
 
   it("refuse la branche par défaut", async () => {
@@ -99,15 +68,30 @@ esac
     await expect(run({ ask: ["Mon titre", ""] })).rejects.toThrow("branche par défaut");
   });
 
-  it("remonte l'erreur de gh", async () => {
-    installFakeGh({ prCreate: "echo 'No commits between main and feature/a' >&2; exit 1" });
+  it("refuse un remote qui n'est pas un dépôt web, sans rien poser comme question", async () => {
+    await expect(run({ ask: [] }, "/srv/git/app.git")).rejects.toThrow("dépôt GitHub");
+    expect(remoteHead()).toBe("");
+  });
+});
 
-    await expect(run({ ask: ["Mon titre", ""] })).rejects.toThrow("No commits between");
+describe("adresse de la pull request", () => {
+  it.each([
+    ["git@github.com:acme/app.git", "https://github.com/acme/app"],
+    ["ssh://git@github.com/acme/app.git", "https://github.com/acme/app"],
+    ["https://github.com/acme/app.git", "https://github.com/acme/app"],
+    ["https://github.com/acme/app/", "https://github.com/acme/app"],
+    ["https://user:secret@github.com/acme/app.git", "https://github.com/acme/app"],
+  ])("comprend %s", (remote, expected) => {
+    expect(toRepositoryWebUrl(remote)).toBe(expected);
   });
 
-  it("explique quand gh n'est pas installé", async () => {
-    process.env.PATH = "/nonexistent";
+  it.each(["/srv/git/app.git", "file:///srv/git/app.git", "https://github.com/app"])("rejette %s", (remote) => {
+    expect(toRepositoryWebUrl(remote)).toBeUndefined();
+  });
 
-    await expect(getDefaultBranch(repo.work)).rejects.toThrow("GitHub CLI");
+  it("encode les caractères spéciaux sans casser les / des branches", () => {
+    const url = buildPullRequestUrl("https://github.com/acme/app", "main", "feature/a#1", { title: "a&b", body: "" });
+
+    expect(url).toBe("https://github.com/acme/app/compare/main...feature/a%231?expand=1&title=a%26b");
   });
 });
