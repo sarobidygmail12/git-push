@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gitpilot · aide</title>
+<style>
+:root { color-scheme: light; --bg:#f7f7f5; --panel:#fff; --text:#1d1f23; --muted:#667; --line:#e2e2de; --accent:#0b6bcb; --code:#f0efeb; }
+:root[data-theme="dark"] { color-scheme: dark; --bg:#14161a; --panel:#1c1f25; --text:#e7e8ea; --muted:#969ca8; --line:#2c3038; --accent:#6db3f8; --code:#272b33; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 system-ui, sans-serif; }
+main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
+header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+h1 { font-size:22px; margin:0; } h2 { font-size:17px; margin:36px 0 12px; }
+nav a { color:var(--accent); margin-right:14px; }
+button { font:inherit; color:inherit; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer; }
+code, pre { font:13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+code { background:var(--code); padding:1px 5px; border-radius:4px; overflow-wrap:anywhere; }
+pre { background:var(--code); padding:12px; border-radius:6px; overflow:auto; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:10px; }
+.card h3 { margin:0; font:600 15px ui-monospace, Menlo, Consolas, monospace; }
+.alias { color:var(--muted); font-weight:400; }
+.card p { margin:6px 0 10px; }
+.label { color:var(--muted); font-size:13px; margin-top:8px; }
+ul { margin:4px 0 0; padding-left:18px; }
+.table { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; background:var(--panel); }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>gitpilot</h1><button id="theme" type="button">Thème</button></header>
+  <nav><a href="/log">Historique</a><a href="#commandes">Commandes</a><a href="#configuration">Configuration</a></nav>
+  <p id="error" hidden></p>
+  <h2 id="commandes">Commandes</h2>
+  <div id="commands"></div>
+  <h2 id="configuration">Configuration</h2>
+  <p>Fichier global <code>~/.gitpilot/config.json</code>, surchargeable par <code>.gitpilot.json</code> à la racine du dépôt.</p>
+  <div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody id="options"></tbody></table></div>
+  <h2>Configuration effective</h2>
+  <pre id="effective"></pre>
+</main>
+<script>
+const element = (tag, text, className) => {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+};
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("gitpilot-theme", theme); } catch {}
+}
+function savedTheme() {
+  try { return localStorage.getItem("gitpilot-theme"); } catch { return null; }
+}
+applyTheme(savedTheme() ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+document.getElementById("theme").onclick = () =>
+  applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+
+function listSection(label, items) {
+  const section = document.createDocumentFragment();
+  section.append(element("div", label, "label"));
+  const list = element("ul");
+  items.forEach((item) => { const row = element("li"); row.append(element("code", item)); list.append(row); });
+  section.append(list);
+  return section;
+}
+
+function commandCard(command) {
+  const card = element("article", undefined, "card");
+  const title = element("h3", command.usage);
+  if (command.aliases.length > 0) {
+    title.append(element("span", "  alias : " + command.aliases.map((alias) => "/" + alias).join(", "), "alias"));
+  }
+  card.append(title, element("p", command.description));
+  if (command.examples.length > 0) card.append(listSection("Exemples", command.examples));
+  if (command.gitSteps.length > 0) card.append(listSection("Étapes Git", command.gitSteps));
+  return card;
+}
+
+function optionRow(option) {
+  const row = element("tr");
+  const name = element("td"); name.append(element("code", option.path));
+  row.append(name, element("td", option.type), element("td", option.description));
+  return row;
+}
+
+async function load() {
+  try {
+    const response = await fetch("/api/help");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    document.getElementById("commands").append(...data.commands.map(commandCard));
+    document.getElementById("options").append(...data.configOptions.map(optionRow));
+    document.getElementById("effective").textContent =
+      data.effectiveConfig ? JSON.stringify(data.effectiveConfig, null, 2) : "Configuration invalide : lance /config dans gitpilot.";
+  } catch (error) {
+    const box = document.getElementById("error");
+    box.hidden = false;
+    box.textContent = "Erreur : " + error.message;
+  }
+}
+load();
+</script>
+</body>
+</html>
