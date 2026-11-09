@@ -85,6 +85,8 @@ You see the project name, your branch, then your files not saved yet, updated ev
 - 🔴 `-2`: 2 files deleted
 - 🟠 `+3`: 3 files modified
 
+The title of your terminal window also shows your branch, like `🚀 Gitpilot : main`.
+
 The grey lines show the real Git commands run for you. Handy for learning! 👀
 
 **On the keyboard:** type `/` to see the commands, use the arrows to choose, Tab to complete and Enter to confirm.

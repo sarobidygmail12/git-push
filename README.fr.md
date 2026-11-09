@@ -82,6 +82,8 @@ Tu vois le nom du projet, ta branche, puis tes fichiers pas encore sauvegardés,
 - 🔴 `-2` : 2 fichiers supprimés
 - 🟠 `+3` : 3 fichiers modifiés
 
+Le titre de la fenêtre du terminal affiche aussi ta branche, par exemple `🚀 Gitpilot : main`.
+
 Les lignes grises montrent les vraies commandes Git lancées pour toi. Pratique pour apprendre ! 👀
 
 **Au clavier :** tape `/` pour voir les commandes, utilise les flèches pour choisir, Tab pour compléter et Entrée pour valider.

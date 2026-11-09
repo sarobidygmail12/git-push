@@ -7,6 +7,7 @@ import { createCommandUi, type DisplayLevel, type PromptRequest, type UiBridge }
 import { Header } from "./Header.js";
 import { PromptInput } from "./PromptInput.js";
 import { PromptView, Spinner } from "./Prompts.js";
+import { useTerminalTitle } from "./useTerminalTitle.js";
 
 const HEADER_REFRESH_MS = 1_000;
 const CLEAR_SCREEN_AND_SCROLLBACK = "\u001B[2J\u001B[3J\u001B[H";
@@ -31,6 +32,7 @@ export function App({ createSession, cwd }: Props): ReactElement {
   const [history, setHistory] = useState<string[]>([]);
   const [externalTask, setExternalTask] = useState<ExternalTask | undefined>(undefined);
   const nextLogId = useRef(0);
+  useTerminalTitle(header?.branch);
 
   const appendLog = useCallback((text: string, level: DisplayLevel): void => {
     const id = nextLogId.current;
