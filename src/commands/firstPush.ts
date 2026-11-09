@@ -2,7 +2,6 @@ import { GitError } from "../core/errors.js";
 import { pushCurrentBranch } from "../core/git/branches.js";
 import { assertNoOperationInProgress, getStatus } from "../core/git/status.js";
 import { isSequenceRunning, resolveSequence, startRebase } from "./shared/resolveSequence.js";
-import { reportPullRequest } from "./shared/reportPullRequest.js";
 import { secureWorkingTree } from "./shared/secureWorkingTree.js";
 import type { Command, CommandContext } from "./types.js";
 import { t } from "../lang/index.js";
@@ -81,5 +80,4 @@ async function publish(ctx: CommandContext): Promise<void> {
   const status = await getStatus(ctx.git);
   await ctx.ui.spinner(t("spinner.push"), () => pushCurrentBranch(ctx.git, status));
   ctx.ui.log(t("firstPush.published", { branch: status.branch ?? t("firstPush.theBranch") }), "success");
-  await reportPullRequest(ctx);
 }

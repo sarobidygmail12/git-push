@@ -47,13 +47,14 @@ git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
 ```
 
-**3. Log in to GitHub.** Install [GitHub CLI](https://cli.github.com), then run this once and choose HTTPS:
+**3. Connect to GitHub.** git-push can't ask you for a password, so create an SSH key once:
 
 ```bash
-gh auth login
+ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub
 ```
 
-git-push can't ask you for a password, so you need this step to send your work.
+Paste the printed line at <https://github.com/settings/keys>. Then always use the **SSH** address of your repositories, the one that starts with `git@github.com:`.
 
 ## 🎬 Your first project, step by step
 
@@ -126,7 +127,7 @@ GitHub has changes you don't have. Type `/pull`, then `/push`. If `/pull` refuse
 
 **🔐 Sending fails because of a password**
 
-Run `gh auth login` in a normal terminal.
+Check that your SSH key is on GitHub (step 3 above) and that `git remote -v` shows an address starting with `git@github.com:`.
 
 **⚔️ A conflict**
 
@@ -242,9 +243,9 @@ You don't need this part to get started. Click a title to open it.
 | `/cherry-pick <hash...>` | `/cp` | Applies commits, with guided conflict resolution |
 | `/rebase [develop\|preprod]` | `/rb` | Rebases on the latest remote version, with guided conflict resolution |
 | `/pull` | | `git pull --ff-only` |
-| `/push` | | Pushes, sets the upstream if needed, shows the link to the open pull request if there is one |
+| `/push` | | Pushes, sets the upstream if needed |
 | `/first-push` | `/fp` | First publish: brings in the commits already on the remote, then pushes and sets the upstream. Never force-pushes |
-| `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then creates the pull request against the default branch. Requires a logged-in `gh` |
+| `/pr` | `/pull-request` | Asks for the title and description, pushes the branch if needed, then opens the GitHub page with both filled in: confirm the pull request there. Uses `git` only |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Sets aside, restores or lists |
 | `/config [show\|set\|edit] [--repo]` | | Lists the options and lets you edit them |

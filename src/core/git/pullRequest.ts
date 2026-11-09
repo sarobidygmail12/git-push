@@ -1,64 +1,57 @@
-import { execa, type Result } from "execa";
-import { z } from "zod";
 import { GitError } from "../errors.js";
+import type { GitClient } from "./gitClient.js";
 import { t } from "../../lang/index.js";
 
-const LOOKUP_TIMEOUT_MS = 10_000;
-const CREATE_TIMEOUT_MS = 30_000;
-const OPEN_STATE = "OPEN";
-const COMMAND_NOT_FOUND = "ENOENT";
-
-const pullRequestSchema = z.object({ url: z.string(), state: z.string() });
+const REMOTE = "origin";
+const SCP_LIKE_REMOTE = /^(?:[^@/]+@)?([^:/]+):(?!\/\/)(.+)$/;
+const DEFAULT_BRANCH_LINE = /^ref: refs\/heads\/(\S+)\s+HEAD$/m;
 
 export type NewPullRequest = { title: string; body: string };
 
-function runGh(cwd: string, args: readonly string[], timeout: number): Promise<Result> {
-  return execa("gh", [...args], {
-    cwd,
-    reject: false,
-    stdin: "ignore",
-    detached: true,
-    timeout,
-    env: { GH_PROMPT_DISABLED: "1" },
-  });
+/** Demande au remote plutôt qu'à `origin/HEAD`, absent d'un dépôt créé par `git init` puis `remote add`. */
+export async function getDefaultBranch(git: GitClient): Promise<string> {
+  const { stdout } = await git.run(["ls-remote", "--symref", REMOTE, "HEAD"]);
+  const branch = DEFAULT_BRANCH_LINE.exec(stdout)?.[1];
+  if (!branch) throw new GitError(t("pr.noDefaultBranch"));
+  return branch;
 }
 
-function toGhError(result: Result, args: readonly string[]): GitError {
-  if (result.code === COMMAND_NOT_FOUND) {
-    return new GitError(t("pr.ghMissing"), { args });
-  }
-  const output = String(result.stderr ?? "").trim() || result.message || t("pr.ghFailed", { command: args.join(" ") });
-  return new GitError(output, { args, stderr: output, ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }) });
+export async function getRepositoryWebUrl(git: GitClient): Promise<string> {
+  const { stdout } = await git.run(["remote", "get-url", REMOTE]);
+  const webUrl = toRepositoryWebUrl(stdout.trim());
+  if (!webUrl) throw new GitError(t("pr.unknownRemote"));
+  return webUrl;
 }
 
-/** `gh pr view` suit l'upstream de la branche courante : une PR ouverte depuis un fork est retrouvée aussi. */
-export async function findOpenPullRequestUrl(cwd: string): Promise<string | undefined> {
-  const result = await runGh(cwd, ["pr", "view", "--json", "url,state"], LOOKUP_TIMEOUT_MS);
-  // gh absent, non connecté ou branche sans PR : le push a réussi, l'absence de lien n'est pas une erreur.
-  if (result.failed) return undefined;
-  const pullRequest = parsePullRequest(String(result.stdout ?? ""));
-  return pullRequest?.state === OPEN_STATE ? pullRequest.url : undefined;
+/** Reconstruit l'adresse depuis l'hôte et le chemin seuls : un jeton présent dans le remote ne doit pas finir dans l'URL affichée. */
+export function toRepositoryWebUrl(remoteUrl: string): string | undefined {
+  const location = parseRemoteLocation(remoteUrl);
+  if (!location) return undefined;
+  const path = location.path.replace(/^\/+|\/+$/g, "").replace(/\.git$/, "");
+  return path.includes("/") ? `https://${location.host}/${path}` : undefined;
 }
 
-export async function getDefaultBranch(cwd: string): Promise<string> {
-  const args = ["repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"];
-  const result = await runGh(cwd, args, LOOKUP_TIMEOUT_MS);
-  if (result.failed) throw toGhError(result, args);
-  return String(result.stdout ?? "").trim();
-}
-
-/** La branche doit déjà être sur le remote : sans terminal, `gh pr create` ne propose pas de la pousser. */
-export async function createPullRequest(cwd: string, { title, body }: NewPullRequest): Promise<string> {
-  const args = ["pr", "create", "--title", title, "--body", body];
-  const result = await runGh(cwd, args, CREATE_TIMEOUT_MS);
-  if (result.failed) throw toGhError(result, args);
-  return String(result.stdout ?? "").trim();
-}
-
-function parsePullRequest(output: string): z.infer<typeof pullRequestSchema> | undefined {
+function parseRemoteLocation(remoteUrl: string): { host: string; path: string } | undefined {
+  const [, scpHost, scpPath] = SCP_LIKE_REMOTE.exec(remoteUrl) ?? [];
+  if (scpHost && scpPath) return { host: scpHost, path: scpPath };
   try {
-    return pullRequestSchema.parse(JSON.parse(output));
+    const url = new URL(remoteUrl);
+    if (url.hostname === "") return undefined;
+    return { host: url.protocol === "ssh:" ? url.hostname : url.host, path: url.pathname };
   } catch {
     return undefined;
   }
+}
+
+/** Git ne sait pas créer de pull request : cette page de GitHub s'ouvre avec le titre et la description déjà remplis. */
+export function buildPullRequestUrl(repositoryUrl: string, base: string, head: string, { title, body }: NewPullRequest): string {
+  const url = new URL(`${repositoryUrl}/compare/${encodeBranch(base)}...${encodeBranch(head)}`);
+  url.searchParams.set("expand", "1");
+  url.searchParams.set("title", title);
+  if (body !== "") url.searchParams.set("body", body);
+  return url.href;
+}
+
+function encodeBranch(branch: string): string {
+  return branch.split("/").map(encodeURIComponent).join("/");
 }

@@ -45,13 +45,14 @@ git config --global user.name "Ton Nom"
 git config --global user.email "ton@email.com"
 ```
 
-**3. Connecte-toi à GitHub.** Installe [GitHub CLI](https://cli.github.com), puis lance cette commande une seule fois et choisis HTTPS :
+**3. Connecte-toi à GitHub.** git-push ne peut pas te demander de mot de passe, alors crée une clé SSH une seule fois :
 
 ```bash
-gh auth login
+ssh-keygen -t ed25519 -C "ton@email.com"
+cat ~/.ssh/id_ed25519.pub
 ```
 
-git-push ne peut pas te demander de mot de passe, donc cette étape est obligatoire pour envoyer ton travail.
+Colle la ligne affichée sur <https://github.com/settings/keys>. Utilise ensuite toujours l'adresse **SSH** de tes dépôts, celle qui commence par `git@github.com:`.
 
 ## 🎬 Ton premier projet, pas à pas
 
@@ -126,7 +127,7 @@ GitHub a des nouveautés que tu n'as pas. Tape `/pull`, puis `/push`. Si `/pull`
 
 **🔐 L'envoi échoue à cause d'un mot de passe**
 
-Lance `gh auth login` dans un terminal normal.
+Vérifie que ta clé SSH est bien sur GitHub (étape 3 plus haut) et que `git remote -v` affiche une adresse qui commence par `git@github.com:`.
 
 **⚔️ Un conflit**
 
@@ -242,9 +243,9 @@ Tu n'as pas besoin de cette partie pour commencer. Clique sur un titre pour l'ou
 | `/cherry-pick <hash...>` | `/cp` | Applique des commits, avec résolution guidée des conflits |
 | `/rebase [develop\|preprod]` | `/rb` | Rebase sur la dernière version distante, avec résolution guidée des conflits |
 | `/pull` | | `git pull --ff-only` |
-| `/push` | | Pousse, pose l'upstream si besoin, affiche le lien de la pull request ouverte s'il y en a une |
+| `/push` | | Pousse, pose l'upstream si besoin |
 | `/first-push` | `/fp` | Première publication : intègre les commits déjà sur le remote, puis pousse et pose l'upstream. Ne force jamais le push |
-| `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis crée la pull request vers la branche par défaut. Nécessite `gh` connecté |
+| `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis ouvre la page GitHub avec les deux déjà remplis : valide la pull request là-bas. N'utilise que `git` |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Met de côté, récupère ou liste |
 | `/config [show\|set\|edit] [--repo]` | | Liste les options et permet de les modifier |

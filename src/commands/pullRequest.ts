@@ -1,7 +1,8 @@
 import { GitError } from "../core/errors.js";
 import { pushCurrentBranch } from "../core/git/branches.js";
-import { createPullRequest, findOpenPullRequestUrl, getDefaultBranch, type NewPullRequest } from "../core/git/pullRequest.js";
+import { buildPullRequestUrl, getDefaultBranch, getRepositoryWebUrl, type NewPullRequest } from "../core/git/pullRequest.js";
 import { assertNoOperationInProgress, getStatus, type RepoStatus } from "../core/git/status.js";
+import { openUrl } from "./shared/openBrowser.js";
 import type { Command, CommandContext } from "./types.js";
 import { t } from "../lang/index.js";
 
@@ -15,10 +16,9 @@ export const pullRequestCommand: Command = {
   examples: ["/pr"],
   get gitSteps() {
     return [
-    t("step.prRepoView"),
-    t("step.prViewStop"),
+    t("step.prDefaultBranch"),
     t("step.prPushIfNeeded"),
-    "gh pr create --title <title> --body <description>",
+    t("step.prOpenPage"),
   ];
   },
   run: async (ctx) => {
@@ -27,16 +27,11 @@ export const pullRequestCommand: Command = {
     if (!status.branch) throw new GitError(t("head.switchFirst"));
     if (!status.headHash) throw new GitError(t("pr.noCommit"));
 
-    // Vérifié avant les questions : si gh n'est pas prêt, on l'apprend sans avoir rien saisi.
-    const defaultBranch = await ctx.ui.spinner(t("spinner.connectGithub"), () => getDefaultBranch(ctx.git.cwd));
+    // Vérifié avant les questions : si le remote ne convient pas, on l'apprend sans avoir rien saisi.
+    const repositoryUrl = await getRepositoryWebUrl(ctx.git);
+    const defaultBranch = await ctx.ui.spinner(t("spinner.connectGithub"), () => getDefaultBranch(ctx.git));
     if (status.branch === defaultBranch) {
       throw new GitError(t("pr.onDefault", { branch: defaultBranch }));
-    }
-
-    const openUrl = await ctx.ui.spinner(t("spinner.searchPr"), () => findOpenPullRequestUrl(ctx.git.cwd));
-    if (openUrl) {
-      ctx.ui.log(t("pr.alreadyOpen", { url: openUrl }), "warn");
-      return;
     }
 
     const draft = await askDraft(ctx);
@@ -49,8 +44,8 @@ export const pullRequestCommand: Command = {
       ctx.ui.log(t("pr.uncommitted", { count: status.files.length }), "warn");
     }
     if (hasUnpushedCommits(status)) await ctx.ui.spinner(t("spinner.push"), () => pushCurrentBranch(ctx.git, status));
-    const url = await ctx.ui.spinner(t("spinner.createPr"), () => createPullRequest(ctx.git.cwd, draft));
-    ctx.ui.log(t("pr.created", { url }), "success");
+    ctx.ui.log(t("pr.opened"), "success");
+    await openUrl(ctx, buildPullRequestUrl(repositoryUrl, defaultBranch, status.branch, draft));
   },
 };
 
