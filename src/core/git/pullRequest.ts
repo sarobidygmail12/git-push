@@ -4,6 +4,7 @@ import { t } from "../../lang/index.js";
 
 const REMOTE = "origin";
 const SCP_LIKE_REMOTE = /^(?:[^@/]+@)?([^:/]+):(?!\/\/)(.+)$/;
+const GITLAB_HOST_MARKER = "gitlab";
 const DEFAULT_BRANCH_LINE = /^ref: refs\/heads\/(\S+)\s+HEAD$/m;
 
 export type NewPullRequest = { title: string; body: string };
@@ -43,12 +44,27 @@ function parseRemoteLocation(remoteUrl: string): { host: string; path: string } 
   }
 }
 
-/** Git ne sait pas créer de pull request : cette page de GitHub s'ouvre avec le titre et la description déjà remplis. */
-export function buildPullRequestUrl(repositoryUrl: string, base: string, head: string, { title, body }: NewPullRequest): string {
+/** Git ne sait pas créer de pull request : la page du serveur s'ouvre avec le titre et la description déjà remplis. */
+export function buildPullRequestUrl(repositoryUrl: string, base: string, head: string, draft: NewPullRequest): string {
+  return new URL(repositoryUrl).hostname.includes(GITLAB_HOST_MARKER)
+    ? buildGitLabUrl(repositoryUrl, base, head, draft)
+    : buildCompareUrl(repositoryUrl, base, head, draft);
+}
+
+function buildCompareUrl(repositoryUrl: string, base: string, head: string, { title, body }: NewPullRequest): string {
   const url = new URL(`${repositoryUrl}/compare/${encodeBranch(base)}...${encodeBranch(head)}`);
   url.searchParams.set("expand", "1");
   url.searchParams.set("title", title);
   if (body !== "") url.searchParams.set("body", body);
+  return url.href;
+}
+
+function buildGitLabUrl(repositoryUrl: string, base: string, head: string, { title, body }: NewPullRequest): string {
+  const url = new URL(`${repositoryUrl}/-/merge_requests/new`);
+  url.searchParams.set("merge_request[source_branch]", head);
+  url.searchParams.set("merge_request[target_branch]", base);
+  url.searchParams.set("merge_request[title]", title);
+  if (body !== "") url.searchParams.set("merge_request[description]", body);
   return url.href;
 }
 

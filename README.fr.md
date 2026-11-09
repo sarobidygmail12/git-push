@@ -45,14 +45,12 @@ git config --global user.name "Ton Nom"
 git config --global user.email "ton@email.com"
 ```
 
-**3. Connecte-toi à GitHub.** git-push ne peut pas te demander de mot de passe, alors crée une clé SSH une seule fois :
+**3. Crée un token d'accès.** git-push se connecte avec un token, jamais avec un mot de passe. Donne-lui le droit de lire et d'écrire dans les dépôts :
 
-```bash
-ssh-keygen -t ed25519 -C "ton@email.com"
-cat ~/.ssh/id_ed25519.pub
-```
+- GitHub : <https://github.com/settings/tokens> (droit `repo`)
+- GitLab : <https://gitlab.com/-/user_settings/personal_access_tokens> (droit `write_repository`)
 
-Colle la ligne affichée sur <https://github.com/settings/keys>. Utilise ensuite toujours l'adresse **SSH** de tes dépôts, celle qui commence par `git@github.com:`.
+Lance ensuite `git-push`, tape `/login` et colle le token. Git le garde dans son propre gestionnaire d'identifiants. Utilise toujours l'adresse **HTTPS** de tes dépôts, celle qui commence par `https://`.
 
 ## 🎬 Ton premier projet, pas à pas
 
@@ -105,6 +103,7 @@ Les lignes grises montrent les vraies commandes Git lancées pour toi. Pratique 
 | `/pull` | Récupère les nouveautés de GitHub |
 | `/push` | Envoie tes commits sur GitHub |
 | `/first-push` | Fait ton tout premier envoi quand GitHub contient déjà des fichiers |
+| `/login` | Te connecte à GitHub, GitLab ou un autre serveur Git avec un token d'accès |
 | `/pr` | Crée une pull request en demandant son titre et sa description |
 | `/branch mon-idee` | Crée une nouvelle branche et va dessus |
 | `/switch main` | Va sur une autre branche |
@@ -127,7 +126,7 @@ GitHub a des nouveautés que tu n'as pas. Tape `/pull`, puis `/push`. Si `/pull`
 
 **🔐 L'envoi échoue à cause d'un mot de passe**
 
-Vérifie que ta clé SSH est bien sur GitHub (étape 3 plus haut) et que `git remote -v` affiche une adresse qui commence par `git@github.com:`.
+Tape de nouveau `/login` avec un nouveau token, et vérifie que `git remote -v` affiche une adresse qui commence par `https://`.
 
 **⚔️ Un conflit**
 
@@ -229,6 +228,7 @@ Tu n'as pas besoin de cette partie pour commencer. Clique sur un titre pour l'ou
 | Commande | Alias | Rôle |
 | --- | --- | --- |
 | `/init` | | Initialise un dépôt Git dans le dossier demandé (dossier courant par défaut) et le relie au dépôt distant indiqué |
+| `/login` | | Demande un token d'accès, le vérifie sur `origin` si c'est un remote HTTPS, puis l'enregistre avec `git credential approve`. Fonctionne avec tout serveur Git |
 | `/commit ["message"]` | `/cm` | Indexe, génère le message, committe, pousse |
 | `/amend ["message"]` | | Modifie le dernier commit non poussé |
 | `/undo` | | Annule le dernier commit non poussé, garde ses modifications |
@@ -245,7 +245,7 @@ Tu n'as pas besoin de cette partie pour commencer. Clique sur un titre pour l'ou
 | `/pull` | | `git pull --ff-only` |
 | `/push` | | Pousse, pose l'upstream si besoin |
 | `/first-push` | `/fp` | Première publication : intègre les commits déjà sur le remote, puis pousse et pose l'upstream. Ne force jamais le push |
-| `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis ouvre la page GitHub avec les deux déjà remplis : valide la pull request là-bas. N'utilise que `git` |
+| `/pr` | `/pull-request` | Demande le titre et la description, pousse la branche si besoin, puis ouvre la page GitHub ou GitLab avec les deux déjà remplis : valide-la là-bas. N'utilise que `git` |
 | `/fetch` | | `git fetch --all` |
 | `/stash [pop\|list]` | | Met de côté, récupère ou liste |
 | `/config [show\|set\|edit] [--repo]` | | Liste les options et permet de les modifier |

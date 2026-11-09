@@ -29,7 +29,7 @@ export const pullRequestCommand: Command = {
 
     // Vérifié avant les questions : si le remote ne convient pas, on l'apprend sans avoir rien saisi.
     const repositoryUrl = await getRepositoryWebUrl(ctx.git);
-    const defaultBranch = await ctx.ui.spinner(t("spinner.connectGithub"), () => getDefaultBranch(ctx.git));
+    const defaultBranch = await ctx.ui.spinner(t("spinner.connectRemote"), () => getDefaultBranch(ctx.git));
     if (status.branch === defaultBranch) {
       throw new GitError(t("pr.onDefault", { branch: defaultBranch }));
     }

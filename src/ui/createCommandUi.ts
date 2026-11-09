@@ -3,7 +3,7 @@ import type { CommandUi, LogLevel } from "../commands/types.js";
 export type DisplayLevel = LogLevel | "git";
 
 export type PromptRequest =
-  | { kind: "ask"; question: string; initial: string; resolve: (answer: string | undefined) => void }
+  | { kind: "ask"; question: string; initial: string; secret: boolean; resolve: (answer: string | undefined) => void }
   | { kind: "confirm"; question: string; resolve: (answer: boolean) => void }
   | { kind: "select"; question: string; labels: readonly string[]; initialIndex: number; resolve: (index: number | undefined) => void };
 
@@ -25,7 +25,7 @@ export function createCommandUi(bridge: UiBridge): CommandUi {
     log: (message, level = "info") => bridge.appendLog(message, level),
     ask: (question, options) =>
       new Promise((resolve) => {
-        bridge.showPrompt({ kind: "ask", question, initial: options?.initial ?? "", resolve: closingPrompt(resolve) });
+        bridge.showPrompt({ kind: "ask", question, initial: options?.initial ?? "", secret: options?.secret ?? false, resolve: closingPrompt(resolve) });
       }),
     confirm: (question) =>
       new Promise((resolve) => {
