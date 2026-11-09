@@ -1,24 +1,34 @@
 # 🧭 gitpilot
 
-Ton copilote Git dans le terminal. Tu tapes `/commit`, l'IA propose le message, tu valides, et c'est poussé.
+🇬🇧 English | [🇫🇷 Français](README.fr.md)
 
-Chaque commande Git lancée pour toi s'affiche en gris. Tu vois donc toujours ce qui se passe, et tu apprends au passage. 👀
+Use Git with simple commands, right in your terminal.
 
-## ✨ Ce que ça t'apporte
+You type `/commit`, gitpilot writes the message for you, and your work goes to GitHub. New to Git? This page is for you. 👋
 
-- 🤖 Des messages de commit générés à partir de ton diff, avec Groq, Gemini ou Ollama.
-- ⌨️ Une autocomplétion des commandes et des noms de branches.
-- 🌳 Un graphe des commits dans ton navigateur, avec `/log`.
-- 🚑 Des raccourcis `/hotfix` et `/fix` qui créent la branche depuis la bonne base.
-- 🧩 Une résolution guidée des conflits pendant un rebase ou un cherry-pick.
-- 🛟 Des garde-fous contre les erreurs qui font mal, comme committer un `.env` sans le voir.
+> [!NOTE]
+> gitpilot's screens are in French for now. This page gives the French words you'll see, with their meaning.
 
-## 🚀 Démarrage rapide
+## 🤔 Words to know
 
-Il te faut Node.js 22.12 ou plus récent, `git` et Yarn.
+| Word | In plain English |
+| --- | --- |
+| **Repository** (repo) | Your project folder, tracked by Git |
+| **Commit** | A save of your work, with a short message |
+| **Branch** | A copy of the project where you can work without disturbing the rest. The main one is often called `main` |
+| **Push** | Send your commits to GitHub |
+| **Pull** | Bring what's new on GitHub to your computer |
+| **Remote** | The online version of your project, on GitHub |
+| **Conflict** | Two people changed the same line, and Git asks you which one to keep |
+
+## 📥 Install
+
+You need [Git](https://git-scm.com/downloads), [Node.js](https://nodejs.org) (version 22.12 or newer) and [Yarn](https://yarnpkg.com/getting-started/install).
+
+**1. Install gitpilot** (Linux or macOS):
 
 ```bash
-git clone <url-de-ton-depot> gitpilot
+git clone https://github.com/sarobidygmail12/gitkraken-cli.git gitpilot
 cd gitpilot
 yarn install
 yarn build
@@ -26,201 +36,280 @@ mkdir -p ~/.local/bin
 ln -s "$PWD/bin/gitpilot.js" ~/.local/bin/gitpilot
 ```
 
-Ensuite, va dans n'importe quel dépôt et lance :
+**2. Tell Git who you are.** You only do this once:
 
 ```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+**3. Log in to GitHub.** Install [GitHub CLI](https://cli.github.com), then run this once and choose HTTPS:
+
+```bash
+gh auth login
+```
+
+gitpilot can't ask you for a password, so you need this step to send your work.
+
+## 🎬 Your first project, step by step
+
+**1. Create an empty repository** at <https://github.com/new>, then copy its address.
+
+**2. Open your project** in the terminal and start gitpilot:
+
+```bash
+cd my-project
 gitpilot
 ```
 
-> [!NOTE]
-> `push` et `pull` ne peuvent pas demander de mot de passe dans l'interface. Configure un credential helper ou charge ta clé dans `ssh-agent` avant de commencer.
+**3. Link your folder to GitHub.** Type `/init`, press Enter to keep the suggested folder, then paste the address you copied.
 
-## 🎮 Comment ça marche
+**4. Save and send your work.** Type `/commit`. If gitpilot says `main` is protected (`branche protégée`), answer yes. It then suggests a message: choose **Valider** (accept).
 
-gitpilot ouvre une petite interface dans ton terminal. L'en-tête affiche ta branche et tes fichiers en cours, mis à jour chaque seconde :
+That's it, your project is on GitHub! 🎉
+
+> [!IMPORTANT]
+> `/commit` takes all your changed files and sends them to GitHub right away.
+
+From then on it's always the same: you work, then you type `/commit`.
+
+## 🖥️ Reading the screen
 
 ```text
-gitpilot mon-projet main (+3, -2, +3)
+gitpilot my-project main (+3, -2, +3)
 ```
 
-Dans l'ordre : 🟢 fichiers ajoutés, 🔴 fichiers supprimés, 🟠 fichiers modifiés. Juste en dessous, tu tapes tes commandes.
+You see the project name, your branch, then your files not saved yet, updated every second:
 
-| Touche | Effet |
+- 🟢 `+3`: 3 files added
+- 🔴 `-2`: 2 files deleted
+- 🟠 `+3`: 3 files modified
+
+The grey lines show the real Git commands run for you. Handy for learning! 👀
+
+**On the keyboard:** type `/` to see the commands, use the arrows to choose, Tab to complete and Enter to confirm.
+
+## ⭐ The essential commands
+
+| Command | What it does |
 | --- | --- |
-| `/` | Ouvre la liste des commandes |
-| ↑ ↓ | Choisissent dans la liste |
-| Tab | Complète |
-| Entrée | Valide |
-| Échap | Ferme la liste |
-| ↑ (liste fermée) | Remonte l'historique |
+| `/status` | Shows where you are |
+| `/commit` | Saves your work and sends it to GitHub |
+| `/pull` | Brings what's new from GitHub |
+| `/push` | Sends your commits to GitHub |
+| `/first-push` | Does your very first send when GitHub already has files |
+| `/branch my-idea` | Creates a new branch and moves to it |
+| `/switch main` | Moves to another branch |
+| `/log` | Opens the project history in your browser |
+| `/undo` | Cancels your last commit not sent yet, without losing your work |
+| `/help` | Opens the help |
+| `/exit` | Quits gitpilot |
 
-### 📝 Ce qui se passe quand tu lances `/commit`
+## 🆘 When something goes wrong
 
-```mermaid
-flowchart TD
-    A["/commit"] --> B{"Branche protégée ou<br/>fichier sensible ?"}
-    B -- "tu refuses" --> X["Arrêt, index intact"]
-    B -- "tu confirmes, ou rien à signaler" --> C["git add ."]
-    C --> D["L'IA propose un message"]
-    D --> E{"À toi de choisir"}
-    E -- "Valider" --> F["git commit"]
-    E -- "Modifier" --> E
-    E -- "Régénérer" --> D
-    E -- "Annuler" --> Y["Pas de commit,<br/>les fichiers restent indexés"]
-    F --> G["git push"]
+**🚫 `rejected` or `fetch first` on your first send**
+
+GitHub already has files, like a README or a LICENSE. Type `/first-push`.
+
+**🚫 `rejected` later on**
+
+GitHub has changes you don't have. Type `/pull`, then `/push`. If `/pull` refuses, run `git pull --rebase` in a normal terminal, then `/push`.
+
+**🔐 Sending fails because of a password**
+
+Run `gh auth login` in a normal terminal.
+
+**⚔️ A conflict**
+
+Open the file gitpilot names. You'll see this:
+
+```text
+<<<<<<< 
+the text from one side
+=======
+the text from the other side
+>>>>>>> 
 ```
 
-Rien n'est committé sans ton accord. Si tu écris `/commit "ton message"`, gitpilot saute l'IA et utilise ton texte.
+Keep the right text, delete the `<<<<<<<`, `=======` and `>>>>>>>` lines, save, then choose **Continuer** (continue). Nervous? Choose **Annuler tout** (cancel everything) and you're back where you started.
 
-> [!TIP]
-> Par défaut, `/commit` indexe tout et pousse tout de suite. Tu préfères garder la main ? Lance `/config set commit.addAll false` ou `/config set commit.autoPush false`.
+**😬 I made a mistake in my commit**
 
-### 🚑 Ce qui se passe avec `/hotfix` et `/fix`
+`/undo` only works if the commit isn't on GitHub yet. Since `/commit` sends right away, you can turn off automatic sending to give yourself time to check:
 
-1. gitpilot vérifie le nom de la branche et sa base, avant de toucher à quoi que ce soit.
-2. Il committe ton travail en cours, avec le même flux que `/commit`.
-3. Il crée la branche : `hotfix/<nom>` depuis `develop`, ou `fix/<nom>` depuis `preprod`.
+```text
+/config set commit.autoPush false
+```
 
-Tes branches s'appellent autrement ? Change-les avec `/config set branches.develop dev`.
+You'll then send your work yourself with `/push`.
 
-### 🧩 Ce qui se passe en cas de conflit
+**🧭 The screen says `HEAD détaché` (detached HEAD)**
 
-Pendant `/rebase` ou `/cherry-pick`, gitpilot liste les fichiers en conflit et attend. Tu les corriges dans ton éditeur, puis tu choisis : continuer, tout annuler (`--abort`) ou passer ce commit (`--skip`). Si tu choisis de continuer alors qu'il reste des conflits, il te dit lesquels.
+You're not on any branch. Go back to the main one with `/switch main`.
 
-### 🎉 Ce qui se passe avec `/first-push`
+**🗂️ The screen says `pas un dépôt Git` (not a Git repository)**
 
-Tu viens de créer ton dépôt sur GitHub avec un README ou une LICENSE, et ton `git push` se fait rejeter avec `fetch first` ? C'est le cas classique : GitHub a son propre premier commit, et le tien n'a aucun lien avec lui. `/first-push` règle ça en une commande :
+You're not in a project tracked by Git. Go to the right folder, or type `/init`.
 
-1. Il récupère ce qu'il y a sur `origin`.
-2. Si tu as des modifications en cours, il te propose de les committer ou de les mettre de côté.
-3. Il replace tes commits par-dessus ceux du dépôt distant. En cas de conflit, tu retrouves la résolution guidée.
-4. Il pousse et relie ta branche, pour que `/push` suffise ensuite.
+**❓ `gitpilot: command not found`**
 
-Il ne force jamais le push, donc les fichiers créés sur GitHub restent en place. Si la branche est déjà reliée au remote, il s'arrête et te renvoie vers `/push`.
-
-## 🤖 Les messages générés par l'IA
-
-gitpilot essaie `ai.provider`, puis les providers de `ai.fallbackOrder`. Il passe au suivant après 15 secondes, ou si le quota est dépassé ou la clé absente. Le dernier recours, `fallback`, construit un message à partir de la liste des fichiers. L'IA ne bloque donc jamais un commit.
-
-Tes clés restent dans ton environnement. La configuration ne contient que le nom des variables. 🔑
-
-### ⚡ Groq (gratuit)
-
-1. Crée une clé sur <https://console.groq.com/keys>.
-2. Ajoute à ton `~/.bashrc` : `export GROQ_API_KEY="..."`
-
-### 💎 Gemini (palier gratuit)
-
-1. Crée une clé sur <https://aistudio.google.com/apikey>.
-2. Ajoute à ton `~/.bashrc` : `export GEMINI_API_KEY="..."`
-
-### 🦙 Ollama (local)
+Run these two commands, then open a new terminal:
 
 ```bash
-ollama pull qwen2.5-coder
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-Le serveur doit tourner sur `http://localhost:11434`. Avec Ollama, ton diff ne quitte pas ta machine.
+## 🛟 Don't panic
 
-### 🔒 Ce qui est envoyé
+- gitpilot asks before saving on `main`.
+- It warns you before including a secret file, like a `.env`.
+- It blocks the Git commands that can erase your work.
+- If something fails, it stops and shows the error.
 
-Le provider reçoit la liste des fichiers et le diff indexé, tronqué à 12 000 caractères. Le contenu des fichiers `.env*`, `*.pem`, `*.key` et `id_rsa*` n'est jamais envoyé, seul leur nom l'est. Et gitpilot te demande confirmation avant de committer un de ces fichiers.
+## 🤖 Turn on AI (optional)
 
-## ⚙️ Configuration
+Without AI, gitpilot still writes a simple message from your list of files. For better messages with Groq, which is free:
 
-Le fichier global `~/.gitpilot/config.json` est créé au premier lancement. Un `.gitpilot.json` à la racine d'un dépôt peut en remplacer une partie.
+1. Create a key at <https://console.groq.com/keys>.
+2. Add this line to your `~/.bashrc`, then open a new terminal:
 
-Pour qu'un dépôt cloné ne puisse pas détourner tes diffs, `apiKeyEnv` et `baseUrl` ne sont acceptés que dans le fichier global.
+   ```bash
+   export GROQ_API_KEY="your-key"
+   ```
+
+Generated messages are in French by default. For English, type `/config set commit.language en`.
+
+> [!NOTE]
+> Your changes are sent to Groq to write the message. The content of secret files (`.env*`, `*.pem`, `*.key`, `id_rsa*`) is never sent.
+
+---
+
+## 🚀 Going further
+
+You don't need this part to get started. Click a title to open it.
+
+<details>
+<summary>📚 All commands</summary>
+
+| Command | Alias | Purpose |
+| --- | --- | --- |
+| `/init` | | Creates a Git repository in the chosen folder (current folder by default) and links it to the given remote |
+| `/commit ["message"]` | `/cm` | Stages, generates the message, commits, pushes |
+| `/amend ["message"]` | | Changes the last unpushed commit |
+| `/undo` | | Cancels the last unpushed commit, keeps its changes |
+| `/status` | `/s` | Repository status |
+| `/diff` | | Summary of changes |
+| `/log` | | Commit graph in the browser: author and branch of each commit, current branch, file details |
+| `/switch <branch>` | `/sw` | Changes branch, with autocomplete |
+| `/branch <name>` | | Creates a branch and moves to it |
+| `/hotfix [name]` | | Commits current work, creates `hotfix/<name>` from develop |
+| `/fix [name]` | | Commits current work, creates `fix/<name>` from preprod |
+| `/cherry-pick <hash...>` | `/cp` | Applies commits, with guided conflict resolution |
+| `/rebase [develop\|preprod]` | `/rb` | Rebases on the latest remote version, with guided conflict resolution |
+| `/pull` | | `git pull --ff-only` |
+| `/push` | | Pushes, sets the upstream if needed |
+| `/first-push` | `/fp` | First publish: brings in the commits already on the remote, then pushes and sets the upstream. Never force-pushes |
+| `/fetch` | | `git fetch --all` |
+| `/stash [pop\|list]` | | Sets aside, restores or lists |
+| `/config` | | Shows or changes the configuration |
+| `/help` | `/h` | Lists commands, opens the detailed help |
+| `/clear` | | Clears the screen |
+| `/exit` | `/quit` | Quits |
+
+</details>
+
+<details>
+<summary>⚙️ Configuration</summary>
+
+The global file `~/.gitpilot/config.json` is created on first launch. A `.gitpilot.json` at the root of a repository can override part of it.
+
+So that a cloned repository can't hijack your diffs, `apiKeyEnv` and `baseUrl` are only accepted in the global file.
 
 ```text
-/config                                 affiche la configuration effective
-/config set commit.autoPush false       modifie le fichier global
-/config set --repo branches.develop dev modifie .gitpilot.json
-/config edit                            ouvre le fichier dans $VISUAL ou $EDITOR
+/config                                 shows the effective configuration
+/config set commit.autoPush false       changes the global file
+/config set --repo branches.develop dev changes .gitpilot.json
+/config edit                            opens the file in $VISUAL or $EDITOR
 ```
 
-Les modèles par défaut changent vite chez les fournisseurs. Si un provider répond `HTTP 404`, change son modèle : `/config set ai.groq.model <modèle>`.
+The `/help` page documents every option.
 
-La page `/help` documente chaque option.
+</details>
 
-## 📚 Toutes les commandes
+<details>
+<summary>🤖 Other AI services</summary>
 
-| Commande | Alias | Rôle |
-| --- | --- | --- |
-| `/init` | | Initialise un dépôt Git dans le dossier demandé (dossier courant par défaut) et le relie au dépôt distant indiqué |
-| `/commit ["message"]` | `/cm` | Indexe, génère le message, committe, pousse |
-| `/amend ["message"]` | | Modifie le dernier commit non poussé |
-| `/undo` | | Annule le dernier commit non poussé, garde ses modifications |
-| `/status` | `/s` | État du dépôt |
-| `/diff` | | Résumé des changements |
-| `/log` | | Graphe des commits dans le navigateur : auteur et branche de chaque commit, branche courante, détail des fichiers |
-| `/switch <branche>` | `/sw` | Change de branche, avec autocomplétion |
-| `/branch <nom>` | | Crée une branche et bascule dessus |
-| `/hotfix [nom]` | | Committe le travail en cours, crée `hotfix/<nom>` depuis develop |
-| `/fix [nom]` | | Committe le travail en cours, crée `fix/<nom>` depuis preprod |
-| `/cherry-pick <hash...>` | `/cp` | Applique des commits, avec résolution guidée des conflits |
-| `/rebase [develop\|preprod]` | `/rb` | Rebase sur la dernière version distante, avec résolution guidée des conflits |
-| `/pull` | | `git pull --ff-only` |
-| `/push` | | Pousse, pose l'upstream si besoin |
-| `/first-push` | `/fp` | Première publication : intègre les commits déjà sur le remote (README, LICENSE…), puis pousse et pose l'upstream |
-| `/fetch` | | `git fetch --all` |
-| `/stash [pop\|list]` | | Met de côté, récupère ou liste |
-| `/config` | | Voir [Configuration](#️-configuration) |
-| `/help` | `/h` | Liste les commandes, ouvre l'aide détaillée |
-| `/clear` | | Efface l'écran |
-| `/exit` | `/quit` | Quitte |
+gitpilot tries `ai.provider`, then the providers in `ai.fallbackOrder`. It moves to the next one after 15 seconds, or if the quota is exceeded or the key is missing. The last resort, `fallback`, builds a message from the list of files.
 
-## 🛟 Les garde-fous
+**Gemini (free tier).** Create a key at <https://aistudio.google.com/apikey>, then add to your `~/.bashrc`: `export GEMINI_API_KEY="..."`
 
-- Le client Git bloque `push --force`, `reset --hard` et `clean` tant qu'un appel n'a pas explicitement confirmé.
-- `main` et `preprod` sont protégées par défaut : gitpilot te demande confirmation avant d'y committer.
-- `/switch` ne change pas de branche avec des modifications en cours sans proposer de les committer ou de les mettre de côté.
-- `/hotfix` et `/fix` vérifient le nom et la base avant de committer quoi que ce soit.
-- Si `develop` a divergé de son remote, `/hotfix` sauvegarde les commits locaux dans `backup/<branche>-<hash>`, puis aligne `develop` sur le remote. `/fix` s'arrête dans ce cas.
-- Si une étape échoue, le flux s'arrête et affiche l'erreur Git brute et l'état du dépôt.
-- Le serveur web n'écoute que sur `127.0.0.1` et refuse les requêtes dont l'en-tête `Host` n'est pas local.
+**Ollama (local).** Run `ollama pull qwen2.5-coder`. The server must be running on `http://localhost:11434`. With Ollama, your diff never leaves your machine.
 
-## 🛠️ Ajouter ta propre commande
+The provider receives the list of files and the staged diff, truncated to 12,000 characters. For `.env*`, `*.pem`, `*.key` and `id_rsa*` files, only the name is sent.
 
-C'est le meilleur moment de ce projet : un fichier, une ligne, et c'est fini.
+Your keys stay in your environment. The configuration only holds the names of the variables.
 
-1. Crée `src/commands/maCommande.ts` :
+Default models change quickly. If a provider answers `HTTP 404`, change its model: `/config set ai.groq.model <model>`.
+
+</details>
+
+<details>
+<summary>🛟 All the safety checks</summary>
+
+- The Git client blocks `push --force`, `reset --hard` and `clean` unless a call has explicitly confirmed.
+- `main` and `preprod` are protected by default: gitpilot asks for confirmation before committing to them.
+- `/switch` won't change branch with work in progress without offering to commit it or set it aside.
+- `/hotfix` and `/fix` check the name and the base before committing anything.
+- If `develop` has diverged from its remote, `/hotfix` saves the local commits in `backup/<branch>-<hash>`, then aligns `develop` with the remote. `/fix` stops in that case.
+- If a step fails, the flow stops and shows the raw Git error and the repository state.
+- The web server only listens on `127.0.0.1` and refuses requests whose `Host` header isn't local.
+
+</details>
+
+<details>
+<summary>🛠️ Add a command</summary>
+
+1. Create `src/commands/myCommand.ts`:
 
    ```ts
    import type { Command } from "./types.js";
 
-   export const maCommande: Command = {
-     name: "ma-commande",
+   export const myCommand: Command = {
+     name: "my-command",
      aliases: ["mc"],
-     description: "Une ligne affichée dans l'autocomplétion",
-     usage: "/ma-commande <argument>",
-     examples: ["/ma-commande valeur"],
+     description: "One line shown in the autocomplete",
+     usage: "/my-command <argument>",
+     examples: ["/my-command value"],
      gitSteps: ["git rev-parse HEAD"],
      run: async (ctx, [argument]) => {
        const { stdout } = await ctx.git.run(["rev-parse", "HEAD"]);
-       ctx.ui.log(`${argument} : ${stdout}`, "success");
+       ctx.ui.log(`${argument}: ${stdout}`, "success");
      },
    };
    ```
 
-2. Ajoute-la au tableau de `src/commands/registry.ts`.
+2. Add it to the array in `src/commands/registry.ts`.
 
-L'autocomplétion et la page `/help` se mettent à jour seules. Un `<` dans `usage` marque un argument obligatoire : Entrée complète alors la commande au lieu de l'exécuter.
+The autocomplete and the `/help` page update themselves. A `<` in `usage` marks a required argument: Enter then completes the command instead of running it.
 
-## 🧑‍💻 Développement
+</details>
+
+<details>
+<summary>🧑‍💻 Development and dependencies</summary>
 
 ```bash
-yarn build       # compile vers dist/ et copie les pages web
-yarn typecheck   # vérifie aussi les tests
-yarn test        # lance vitest
+yarn build       # compiles to dist/ and copies the web pages
+yarn typecheck   # also checks the tests
+yarn test        # runs vitest
 ```
 
-## 📦 Dépendances
+The required stack: `ink`, `ink-text-input`, `execa`, `open`, `zod`, and `vitest` for tests. On top of that:
 
-La stack imposée : `ink`, `ink-text-input`, `execa`, `open`, `zod`, et `vitest` pour les tests. S'y ajoutent :
+- `react`, required by `ink`.
+- `vite`, required by `vitest`, which Yarn doesn't install automatically.
+- `typescript`, `@types/node` and `@types/react`, for compiling and types, in development only.
 
-- `react`, requis par `ink`.
-- `vite`, requis par `vitest`, que Yarn n'installe pas automatiquement.
-- `typescript`, `@types/node` et `@types/react`, pour la compilation et les types, en développement uniquement.
+TypeScript stays on version 6, because Yarn 4.10 applies a patch to it that fails on version 7.
 
-TypeScript reste en version 6, car Yarn 4.10 lui applique un patch qui échoue sur la version 7.
+</details>
